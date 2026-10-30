@@ -283,6 +283,6 @@ feature/linux-r1                     │ (after       │
 These are answered by short tests on the maintainer's machine, during the work. Each has a decided fallback.
 
 1. **Clipboard on GNOME.** Try the portal Clipboard interface, then the X11 clipboard through XWayland. If neither works: type only, no clipboard copy. The layout fallback then cannot work either, so the app tells the user to switch to English (US) when the text cannot be typed.
-2. **Permission after a reboot.** Does GNOME keep the remote-input permission (restore token) after a reboot? If not: one dialog per login, and `docs/linux.md` says so.
+2. **Permission after a reboot.** Answered by S1: yes, GNOME keeps it. The dialog appears only on the first start (`docs/linux-spikes.md`).
 3. **The meter on GNOME.** Does GNOME keep an XWayland override-redirect window above other windows? If not: a GNOME Shell extension.
-4. **Active layout under libei.** Does the app learn the active layout (English or Arabic) from GNOME's libei keymap? If not: always paste from the clipboard when more than one layout is set up.
+4. **Active layout under libei.** Answered by S1: yes, but only at the moment it asks. The app checks it before each dictation. With Arabic active, it pastes from the clipboard; forcing English would type Arabic letters (`docs/linux-spikes.md`).
