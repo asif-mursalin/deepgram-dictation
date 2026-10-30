@@ -20,7 +20,7 @@ cd spikes/typing && cargo build --release
 | Typing works in Firefox | Yes (address bar) |
 | Typing works in GNOME Terminal | Yes (at the prompt) |
 | The second run skips the dialog (restore token) | Yes. Connected in 0.1 s, no dialog. GNOME returns a new token each time, which must be saved |
-| The dialog is still skipped after a reboot (spec open question 2) | _pending_ |
+| The dialog is still skipped after a reboot (spec open question 2) | Yes. After a restart, it connected in 0.2 s with no dialog, and the text appeared |
 | The active layout is detected: English (US) active | Yes, group 0 `us`. Sometimes through libei (the modifiers event), sometimes not; then eitype reads it from GNOME directly. The libei keymap has both layouts |
 | The active layout is detected: Arabic active (spec open question 4) | Yes, group 1. With the automatic layout, eitype refuses: `Character not found in keymap: H`, and nothing is typed |
 | English text with Arabic active comes out as English | **No.** Forcing layout 0 (`--layout 0`) presses the English key positions, but GNOME applies the active Arabic layout: "Hello, world." came out as `أثممخو صخقمي`. The app must not force a layout |
@@ -32,7 +32,7 @@ cd spikes/typing && cargo build --release
 - **The layout is read only once, at connect.** In one run, Arabic was active at connect, and the user switched to English during the idle time. The program still used the Arabic layout and refused to type. The app must check the active layout before each dictation, not once at start.
 - **How eitype finds the layout varies.** Sometimes GNOME reports the group through libei (the modifiers event), sometimes not, and then eitype reads it from GNOME directly. Both gave the right answer in every run.
 
-**Conclusion:** typing through the RemoteDesktop portal and libei works on GNOME 51, in gedit, Firefox and GNOME Terminal. The permission is asked once and then remembered (reboot still to test). Release 1 can go ahead as planned (Checkpoint A, S1). For T8:
+**Conclusion:** typing through the RemoteDesktop portal and libei works on GNOME 51, in gedit, Firefox and GNOME Terminal. The permission is asked once and then remembered, also after a reboot. Release 1 can go ahead as planned (Checkpoint A, S1). For T8:
 
 1. Keep one connection open, and do not close it right after typing.
 2. Before each dictation, read the active layout again.

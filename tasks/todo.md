@@ -26,7 +26,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when: the current release `dictation.exe` (from `main`, before any core change) works in the VM. Alt+M, speak, Alt+M types the text into Notepad, and the meter and tray show. That run is the baseline for Checkpoints B and D. Write down anything the VM cannot test.
   - Depends on: none (needed before Checkpoint B)
 
-- [ ] **S1: Spike: type text through the RemoteDesktop portal and libei** (S, `spikes/typing/`, `docs/linux-spikes.md`)
+- [x] **S1: Spike: type text through the RemoteDesktop portal and libei** (S, `spikes/typing/`, `docs/linux-spikes.md`)
   - Do: a small program that opens a keyboard-only RemoteDesktop session (`ashpd`), connects to EIS (`reis`), and types "Hello, world." into the focused window after 3 seconds. Save the restore token and reuse it on the next run. Print the keymap layout that libei reports while English (US) is active, then while Arabic is active.
   - Done when: `docs/linux-spikes.md` answers these questions:
     - Does typing work in gedit, Firefox and GNOME Terminal?
