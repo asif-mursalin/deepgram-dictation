@@ -1,7 +1,11 @@
 //! Spike S1: type text into the focused window through the RemoteDesktop
 //! portal and libei, on GNOME Wayland.
 //!
-//!   typing-spike [--delay SECONDS] [--layout N] [--forget] [TEXT]
+//!   typing-spike [--delay SECONDS] [--idle SECONDS] [--layout N] [--forget] [TEXT]
+//!
+//! It waits `--delay` seconds (time to click into the target window), then
+//! connects, then types. `--idle` keeps the connection open that long
+//! before typing, to see whether GNOME drops an idle connection.
 //!
 //! It answers four questions (tasks/todo.md, S1):
 //!
@@ -24,21 +28,25 @@ use eitype::{EiType, EiTypeConfig};
 
 const DEFAULT_TEXT: &str = "Hello, world.";
 const DEFAULT_DELAY: u64 = 5;
+/// Time to keep the connection open after typing, so GNOME handles the
+/// last keys before the session closes.
+const HOLD: Duration = Duration::from_secs(1);
 
 struct Args {
     delay: u64,
+    idle: u64,
     layout: Option<u32>,
     forget: bool,
     text: String,
 }
 
 fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info,zbus=warn,tracing=warn")).init();
     let args = match parse_args(std::env::args().skip(1)) {
         Ok(args) => args,
         Err(msg) => {
             eprintln!("{msg}");
-            eprintln!("usage: typing-spike [--delay SECONDS] [--layout N] [--forget] [TEXT]");
+            eprintln!("usage: typing-spike [--delay SECONDS] [--idle SECONDS] [--layout N] [--forget] [TEXT]");
             std::process::exit(2);
         }
     };
@@ -60,6 +68,9 @@ fn run(args: Args) -> Result<(), String> {
         if saved.is_some() { "found, the dialog should NOT appear" } else { "none, expect the dialog" }
     );
 
+    println!("Click into the target window. Connecting in {} s...", args.delay);
+    std::thread::sleep(Duration::from_secs(args.delay));
+
     let config = EiTypeConfig { layout_index: args.layout, ..EiTypeConfig::from_env() };
     let started = Instant::now();
     let (mut typer, token) = EiType::connect_portal_with_token(config, saved.as_deref())
@@ -74,8 +85,10 @@ fn run(args: Args) -> Result<(), String> {
         None => println!("The portal returned no restore token: the dialog will come back."),
     }
 
-    println!("Click into the target window. Typing in {} s...", args.delay);
-    std::thread::sleep(Duration::from_secs(args.delay));
+    if args.idle > 0 {
+        println!("Idle for {} s before typing...", args.idle);
+        std::thread::sleep(Duration::from_secs(args.idle));
+    }
     let started = Instant::now();
     typer.type_text(&args.text).map_err(|e| format!("type: {e}"))?;
     println!(
@@ -83,16 +96,18 @@ fn run(args: Args) -> Result<(), String> {
         args.text.chars().count(),
         started.elapsed().as_millis()
     );
+    std::thread::sleep(HOLD);
     typer.close();
     Ok(())
 }
 
 fn parse_args(mut it: impl Iterator<Item = String>) -> Result<Args, String> {
-    let mut args = Args { delay: DEFAULT_DELAY, layout: None, forget: false, text: String::new() };
+    let mut args = Args { delay: DEFAULT_DELAY, idle: 0, layout: None, forget: false, text: String::new() };
     let mut words = Vec::new();
     while let Some(arg) = it.next() {
         match arg.as_str() {
             "--delay" => args.delay = number(it.next(), "--delay")?,
+            "--idle" => args.idle = number(it.next(), "--idle")?,
             "--layout" => args.layout = Some(number(it.next(), "--layout")?),
             "--forget" => args.forget = true,
             _ => words.push(arg),
@@ -135,6 +150,7 @@ mod tests {
     fn defaults_without_arguments() {
         let args = parse(&[]).unwrap();
         assert_eq!(args.delay, DEFAULT_DELAY);
+        assert_eq!(args.idle, 0);
         assert_eq!(args.layout, None);
         assert!(!args.forget);
         assert_eq!(args.text, DEFAULT_TEXT);
@@ -142,8 +158,9 @@ mod tests {
 
     #[test]
     fn flags_and_text() {
-        let args = parse(&["--delay", "2", "--layout", "1", "--forget", "Dr.", "Smith"]).unwrap();
+        let args = parse(&["--delay", "2", "--idle", "30", "--layout", "1", "--forget", "Dr.", "Smith"]).unwrap();
         assert_eq!(args.delay, 2);
+        assert_eq!(args.idle, 30);
         assert_eq!(args.layout, Some(1));
         assert!(args.forget);
         assert_eq!(args.text, "Dr. Smith");
