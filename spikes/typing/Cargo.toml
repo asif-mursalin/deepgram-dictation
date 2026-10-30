@@ -1,0 +1,13 @@
+[package]
+name = "typing-spike"
+version = "0.1.0"
+edition = "2021"
+description = "Spike S1: type text through the RemoteDesktop portal and libei"
+license = "MIT"
+publish = false
+
+[dependencies]
+# Portal session, restore token, keymap lookup and layout detection on top of
+# reis (libei) and ashpd. The spike checks what it can do on GNOME 51.
+eitype = "=0.2.2"
+env_logger = "0.11"
