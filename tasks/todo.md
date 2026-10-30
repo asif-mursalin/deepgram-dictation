@@ -40,7 +40,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when: `docs/linux-spikes.md` names the approach that works, or says neither does (spec open question 1). It also says whether the entry can be marked "do not keep in history".
   - Depends on: T1
 
-- [ ] **S3: Spike: register Alt+M through the GlobalShortcuts portal** (S, `spikes/hotkeys/`, `docs/linux-spikes.md`)
+- [x] **S3: Spike: register Alt+M through the GlobalShortcuts portal** (S, `spikes/hotkeys/`, `docs/linux-spikes.md`)
   - Do: bind three shortcuts with preferred triggers Alt+M, Ctrl+Alt+Z and Ctrl+Alt+Q, and print each activation. Run it twice.
   - Done when: `docs/linux-spikes.md` records:
     - what GNOME 51 shows the first time;
@@ -119,7 +119,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - XDG paths: config in `~/.config/dictation/`, log in `~/.local/state/dictation/`.
     - A lock file in `$XDG_RUNTIME_DIR`, and a Unix socket for `--toggle` and `--quit`.
     - An `impl Host`, where `paste` only writes the text to the log for now.
-    - Before any portal call, register the app ID with `org.freedesktop.host.portal.Registry`.
+    - On start, write `~/.local/share/applications/io.github.rawasmhd.DeepgramDictation.desktop` if it is missing, then register the app ID with `org.freedesktop.host.portal.Registry` (`ashpd::register_host_app`) before any portal call. Registering fails without the `.desktop` file (S3).
   - Done when:
     - `dictation &` and then `dictation --toggle`, speak, `dictation --toggle` → the transcript is in `~/.local/state/dictation/dictation.log`.
     - A second `dictation` exits with "already running".
@@ -155,9 +155,9 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Depends on: T8, S2
 
 - [ ] **T10: Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q through the GlobalShortcuts portal** (S, `linux/src/{hotkey,main}.rs`)
-  - Do: bind the three shortcuts with preferred triggers, and reuse the session so the dialog appears only once. If the portal is missing, log it, and keep `--toggle` working.
+  - Do: bind the three shortcuts with preferred triggers (`ALT+m`, `CTRL+ALT+z`, `CTRL+ALT+q`), under the app ID from T6. GNOME remembers the permission per app ID, so the dialog appears only once (S3). If no press arrives after the first dialog, rebind once. If the portal is missing, log it, and keep `--toggle` working.
   - Done when: after the first dialog, Alt+M starts and stops a dictation from any app, Ctrl+Alt+Q quits, and a restart does not show the dialog again.
-  - Depends on: T6, S3
+  - Depends on: T6 (app ID and `.desktop` file), S3
 
 - [ ] **T11: Undo with Ctrl+Alt+Z** (S, `linux/src/{typing,main}.rs`)
   - Do: implement `Host::backspaces` with libei. `typed_since_reset` always returns false on GNOME (spec decision).
@@ -176,7 +176,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 
 - [ ] **T12: Desktop file, icons, start at login, first start without a key** (M, `linux/src/{autostart,install,main}.rs`, `linux/data/io.github.rawasmhd.DeepgramDictation.desktop`)
   - Do:
-    - `dictation --install-desktop` writes the `.desktop` file and the hicolor PNG icons (drawn by `core::art`) to `~/.local/share/`.
+    - `dictation --install-desktop` writes the hicolor PNG icons (drawn by `core::art`) to `~/.local/share/icons/`, and refreshes the `.desktop` file from T6 with the icon.
     - Start at login writes or removes `~/.config/autostart/io.github.rawasmhd.DeepgramDictation.desktop`.
     - Without a key: ask in the terminal if there is one, and check the key with Deepgram. Otherwise show a notification with the `.env` path.
   - Done when:

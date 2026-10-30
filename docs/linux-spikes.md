@@ -85,12 +85,18 @@ cd spikes/hotkeys && cargo build --release
 
 | Question | Result |
 |---|---|
-| Without an app ID: GNOME accepts the request | _pending_ |
-| What GNOME 51 shows the first time | _pending_ |
-| Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q are granted as asked | _pending_ |
-| Presses arrive (and releases) | _pending_ |
-| The second run asks again | _pending_ |
-| With an app ID: the same questions | _pending_ |
-| Alt+M still reaches other apps while bound | _pending_ |
+| Without an app ID: GNOME accepts the request | Yes, but it files the shortcuts under the app that started the process. Started from Claude Code inside VS Code, they were saved under `com.microsoft.VSCode` (dconf `/org/gnome/settings-daemon/global-shortcuts/`). Removed after the test |
+| What GNOME 51 shows the first time | A dialog that asks to allow the app to set shortcuts globally, with the three shortcuts. Accepting takes 10–17 s |
+| Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q are granted as asked | Yes: `Press <Alt>m`, `Press <Control><Alt>z`, `Press <Control><Alt>q` |
+| Presses arrive (and releases) | Second run: yes, each press and release, about 0.1–0.2 s apart. First run (right after the dialog): none arrived; cause not clear |
+| The second run asks again | No. Bound in 0.3 s without a dialog (first run: 17 s with the dialog) |
+| With an app ID: the same questions | Registering fails without a `.desktop` file: `App info not found for 'io.github.rawasmhd.DeepgramDictation'`. With a (hidden) `~/.local/share/applications/io.github.rawasmhd.DeepgramDictation.desktop`, it registers, and GNOME saves the shortcuts under our ID. First run: dialog, then all presses arrive. Second run: no dialog (0.3 s), all presses arrive |
+| Alt+M still reaches other apps while bound | Not tested. While the app runs, GNOME keeps Alt+M for it, as Windows does with RegisterHotKey |
 
-**Conclusion:** _pending_
+**Conclusion:** the GlobalShortcuts portal works on GNOME 51. It grants Alt+M, Ctrl+Alt+Z and Ctrl+Alt+Q as asked, asks once, and delivers each press and release. For T6, T10 and T12:
+
+1. **Register the app ID before any portal call, and install the `.desktop` file before that.** Without its own app ID, GNOME saves the permission under the app that started the process (here VS Code, because Claude Code runs in it). Registering needs a `.desktop` file for that ID, so `dictation` must write `~/.local/share/applications/io.github.rawasmhd.DeepgramDictation.desktop` on the first start (or the package installs it). The same applies to the RemoteDesktop permission from S1 and S2, which was probably saved under VS Code too.
+2. **The shortcuts may not work right after the first dialog.** In the first run (no app ID), no press arrived after the dialog; in the app-ID run, presses 40 s later did. T10 tests presses right after the dialog, and rebinds once if none arrive.
+3. **The dialog says "globally".** `docs/linux.md` explains what it is and that the keys can be changed in GNOME Settings.
+
+Clean-up after the test: the temporary `.desktop` file and the saved shortcuts (under `com.microsoft.VSCode` and under our ID) were removed.
