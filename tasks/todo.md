@@ -2,7 +2,7 @@
 
 Root branch: `feature/linux-r1`. Plan: [`plan.md`](plan.md). Spec: [`SPEC.md`](../SPEC.md).
 
-Each task branch starts from `origin/feature/linux-r1`, is named `<type>/<task>-<short-name>` (for example `feature/T8-typing`), and merges back with a pull request. The GitHub issues are posted before the release pull request into `main`.
+The work happens in the fork `asif-mursalin/deepgram-dictation` (`origin`). `upstream` is `rawasmhd/deepgram-dictation`, fetched only, never pushed to. Each task branch starts from `origin/feature/linux-r1`, is named `<type>/<task>-<short-name>` (for example `feature/T8-typing`), and merges back with a pull request inside the fork. The GitHub issues are posted before the release pull request into `main`.
 
 **Every task is done only when** (unless the task says otherwise): `cargo build` has no warnings and `cargo test` passes in each crate it changed, the Windows app still compiles (`cd rust && cargo check --target x86_64-pc-windows-gnu`), and it changed only the files listed.
 
@@ -69,7 +69,8 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 
 - [ ] **T2: CI runs on `feature/linux-r1`, with a Linux job** (S, `.github/workflows/ci.yml`)
   - Do: add `feature/linux-r1` to the `push` branches. Add an `ubuntu-24.04` job that installs `pkg-config libasound2-dev libxkbcommon-dev` and runs `cargo build --locked` and `cargo test --locked` in each crate folder that exists (`core/`, `linux/`). Leave the Windows job as it is, but also run `core/` tests there once `core/` exists.
-  - Done when: a push to `feature/linux-r1` runs CI, and the Windows job is green.
+  - Before: turn on GitHub Actions in the fork's **Actions** tab.
+  - Done when: a push to `feature/linux-r1` in the fork runs CI, and the Windows job is green.
   - Depends on: none
 
 - [ ] **T3: Create `core/` with gfx and art** (M, `core/Cargo.toml`, `core/src/{lib,gfx,art}.rs`, `rust/Cargo.toml`, `rust/build.rs`, `rust/src/main.rs`)
@@ -205,7 +206,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 
 - [ ] **T16: Full regression run, then the release pull request into `main`** (no new code)
   - Do:
-    1. Merge `origin/main` into `feature/linux-r1`. CI must be green.
+    1. `git fetch upstream` and merge `upstream/main` into `feature/linux-r1`. CI in the fork must be green.
     2. **Windows:** in the Windows 11 VM (W1), run the CI-built `dictation.exe` and check:
        - Alt+M and live paste
        - Paused
@@ -217,6 +218,6 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 
        Then run `bench/` and compare it with the last result in `bench/results/`.
     3. **Linux:** run the manual checklist in SPEC.md (Testing Strategy) and the release 1 success criteria.
-    4. Post the tracking issue and one issue per task. Open the pull request `feature/linux-r1` → `main` that links them.
+    4. Post the tracking issue and one issue per task. Open the pull request `asif-mursalin:feature/linux-r1` → `rawasmhd:main` that links them.
   - Done when: every check passes, with the results written in the pull request, and the maintainer merges it.
   - Depends on: all tasks above

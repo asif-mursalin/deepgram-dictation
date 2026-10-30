@@ -101,7 +101,7 @@ Each task leaves the Windows app building and passing its tests. These tasks cha
 
 ### Checkpoint D: release 1 regression (gate for `main`)
 
-- T16: Full regression run, then the release pull request into `main`
+- T16: Full regression run, then the release pull request from the fork into `rawasmhd:main`
 
 ## Parallel work
 
@@ -120,7 +120,7 @@ Each task leaves the Windows app building and passing its tests. These tasks cha
 | The RemoteDesktop portal or libei does not type on GNOME 51 | High: no text at the cursor | S1 first. Fallback: clipboard + Ctrl+V through the portal; last resort ydotool (needs approval, SPEC "Ask first") |
 | `reis` (libei crate) is young and changes its API | Medium | Pin the exact version; keep libei code in `typing.rs` only |
 | Moving code to `core/` breaks the Windows app in a way the tests do not catch | High | One module group per task; `cargo check --target x86_64-pc-windows-gnu` locally; CI Windows tests; manual Windows check at Checkpoint B |
-| `main` changes while the branch is open and conflicts with the moved files | Medium | Merge `origin/main` into the root branch after every change to `main` (SPEC "Branches and tracking", item 3) |
+| `main` changes while the branch is open and conflicts with the moved files | Medium | Merge `upstream/main` into the root branch after every change to `rawasmhd`'s `main` (SPEC "Branches and tracking", item 3) |
 | GNOME forgets the typing permission after a reboot | Low | S1 tests it; worst case one dialog per login, documented |
 | The app ID is missing when started from a terminal, so portals misbehave | Medium | T6 registers with `org.freedesktop.host.portal.Registry` first; start with `gtk-launch` |
 | The Windows 11 VM behaves differently from a real PC (microphone, hotkeys, start at login) | Medium: a Windows bug could slip through | W1 checks the microphone and hotkeys first; anything the VM cannot test is listed in the release pull request |

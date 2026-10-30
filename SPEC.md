@@ -235,6 +235,13 @@ Linux-only code stays in `linux/`. `core/` never imports `windows-sys`, `ashpd` 
 
 The Linux work has a root branch per release. Task branches merge into it, and it merges into `main` once, at the release.
 
+**The work happens in a fork.** The maintainer's GitHub account `asif-mursalin` has no write access to `rawasmhd/deepgram-dictation`, so:
+
+- `origin` is the fork, `asif-mursalin/deepgram-dictation`. The root branch, the task branches and their pull requests live there.
+- `upstream` is `rawasmhd/deepgram-dictation`. Nothing is pushed to it. Its `main` is only fetched to sync.
+- The release pull request goes from `asif-mursalin:feature/linux-r1` into `rawasmhd:main`.
+- CI runs in the fork. GitHub Actions must be turned on once in the fork's **Actions** tab.
+
 ```text
 main ──●──────────●─────────────────●──────────────●──→  Windows releases, as today
         \          \ sync            ↑ release 1    ↑ release 2
@@ -247,17 +254,17 @@ feature/linux-r1                     │ (after       │
 ```
 
 1. **`feature/linux-r1`** is the root branch for release 1. It starts from the latest `main`. It holds all the release 1 work, including the move of the shared code into `core/`.
-2. **Task branches** start from `origin/feature/linux-r1` and are named `<type>/<task>-<short-name>`, for example `feature/T3-typing`. Their pull requests go into the root branch. Delete each one after its merge.
-3. **Sync often.** The `core/` move changes Windows files, so merge `origin/main` into the root branch (with a pull request) each time `main` changes. Do it right away if the change touches `rust/src`. Then run `cargo build` and `cargo test` in `core/`, `rust/` and `linux/`.
+2. **Task branches** start from `origin/feature/linux-r1` (the fork) and are named `<type>/<task>-<short-name>`, for example `feature/T3-typing`. Their pull requests go into the root branch, inside the fork. Delete each one after its merge.
+3. **Sync often.** The `core/` move changes Windows files, so run `git fetch upstream` and merge `upstream/main` into the root branch each time `rawasmhd`'s `main` changes. Also push it to the fork's `main` (`git push origin upstream/main:main`), so both stay the same. Do it right away if the change touches `rust/src`. Then run `cargo build` and `cargo test` in `core/`, `rust/` and `linux/`.
 4. **Nothing goes to `main` until the regression tests pass.** The release pull request from the root branch into `main` is merged only when all of these pass on the root branch:
    - CI: `cargo build --release --locked` and `cargo test --locked` for `core/`, `rust/` and `linux/`, on Windows and Linux.
    - Windows regression: the Windows app does everything it did before the branch. Check Alt+M, live paste, the Paused state, Ctrl+Alt+Z, the meter, the tray menu, Settings, Custom words, start at login, and Ctrl+Alt+Q in the Windows 11 VM (W1 in `tasks/todo.md`). Run `bench/` and compare the timings with the last result in `bench/results/`.
    - Linux: the manual checklist in Testing Strategy, and the release success criteria.
-5. **Release 1:** after the regression tests pass, one pull request merges the root branch into `main`. The Linux release is tagged from `main`. After that, delete the root branch.
+5. **Release 1:** after the regression tests pass, one pull request from the fork merges the root branch into `rawasmhd:main`. The Linux release is tagged from `main`. After that, delete the root branch.
 6. **The release 2 root branch** starts from `main` after release 1 is merged, and works the same way. Its name is chosen then.
-7. **CI** runs on pushes to the root branch too, not only to `main`.
+7. **CI** runs on pushes to the root branch too, not only to `main`. In the fork, that needs Actions turned on.
 
-**Tracking:** until the issues are posted, the tasks are tracked in `tasks/todo.md` on the root branch. Task names are `T1`, `T2`, and so on. Before the release pull request into `main`, post the tracking issue and one issue per task. The release pull request links them (`Closes #…`).
+**Tracking:** until the issues are posted, the tasks are tracked in `tasks/todo.md` on the root branch. Task names are `T1`, `T2`, and so on. Before the release pull request into `main`, post the tracking issue and one issue per task in `rawasmhd/deepgram-dictation`. The release pull request links them (`Closes #…`).
 
 ## Decisions (2026-10-29)
 
