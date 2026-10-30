@@ -238,7 +238,7 @@ The Linux work has a root branch per release. Task branches merge into it, and i
 ```text
 main ──●──────────●─────────────────●──────────────●──→  Windows releases, as today
         \          \ sync            ↑ release 1    ↑ release 2
-feature/setting-for-linux            │ (after       │
+feature/linux-r1                     │ (after       │
          ●──●──●────●──●──●──●──────●  regression   │
             ↑  ↑       ↑  ↑            tests pass)  │
             task branches (feature/<task>-<name>)   │
@@ -246,8 +246,8 @@ feature/setting-for-linux            │ (after       │
                       release 2 root   ●──●──●──●───●
 ```
 
-1. **`feature/setting-for-linux`** is the root branch for release 1. It starts from the latest `main`. It holds all the release 1 work, including the move of the shared code into `core/`.
-2. **Task branches** start from `origin/feature/setting-for-linux` and are named `<type>/<task>-<short-name>`, for example `feature/T3-typing`. Their pull requests go into the root branch. Delete each one after its merge.
+1. **`feature/linux-r1`** is the root branch for release 1. It starts from the latest `main`. It holds all the release 1 work, including the move of the shared code into `core/`.
+2. **Task branches** start from `origin/feature/linux-r1` and are named `<type>/<task>-<short-name>`, for example `feature/T3-typing`. Their pull requests go into the root branch. Delete each one after its merge.
 3. **Sync often.** The `core/` move changes Windows files, so merge `origin/main` into the root branch (with a pull request) each time `main` changes. Do it right away if the change touches `rust/src`. Then run `cargo build` and `cargo test` in `core/`, `rust/` and `linux/`.
 4. **Nothing goes to `main` until the regression tests pass.** The release pull request from the root branch into `main` is merged only when all of these pass on the root branch:
    - CI: `cargo build --release --locked` and `cargo test --locked` for `core/`, `rust/` and `linux/`, on Windows and Linux.
@@ -267,7 +267,7 @@ feature/setting-for-linux            │ (after       │
 - Meter and tray icon both, on GNOME too.
 - Keyboard layouts: English (US) and Arabic. Fall back to one clipboard paste when the active layout cannot type the text.
 - Windows keeps its current TLS (SChannel). The official `.exe` is built by CI with MSVC.
-- One root branch per release. Release 1 uses `feature/setting-for-linux`. The `core/` move goes into it, not straight into `main`.
+- One root branch per release. Release 1 uses `feature/linux-r1`. The `core/` move goes into it, not straight into `main`.
 - Nothing merges into `main` until the regression tests pass (Branches and tracking, item 4).
 - Tasks are tracked locally in `tasks/todo.md` until the release. Issues are posted before the release pull request.
 
