@@ -23,7 +23,7 @@ Bring the dictation app to Linux, so that it works the way it does on Windows: p
 - **Ctrl+Alt+Q** quits.
 - Streaming transcription with Deepgram, with the batch fallback, exactly as on Windows (shared code).
 - **Text at the cursor:** the app types the text into the window that has focus, through the RemoteDesktop portal with libei. The first start asks for permission once. The app saves the restore token, so it does not ask again.
-- **Keyboard layouts:** the maintainer uses English (US) and Arabic. Before it types, the app checks that every character can be typed on the active layout. If one cannot (for example, Arabic is active while dictating English, or the text has an emoji), it pastes the whole dictation once from the clipboard with Ctrl+V. It never types English text as Arabic letters.
+- **Keyboard layouts:** the maintainer uses English (US) and Arabic. The app types with keysyms through the RemoteDesktop portal, which gives English letters even while Arabic is active (S2). Characters that are on no layout (é, —, emoji) would be dropped, so if the text has any character other than printable ASCII, a space or a new line, the app pastes the whole dictation once from the clipboard with Ctrl+V. It never types English text as Arabic letters.
 - **Clipboard:** one copy of the full dictation goes on the clipboard at the end, as on Windows, so Ctrl+V pastes it again. Phrases are typed, not pasted, so the clipboard history gets at most one entry per dictation. If GNOME does not let a background app set the clipboard, the text is only typed (see Open Questions, item 1).
 - **Undo (Ctrl+Alt+Z):** works as on Windows: it deletes the last dictation with Backspace. On GNOME, the app cannot see that the user typed or switched windows after the dictation, so undo cannot cancel itself there. The README must say this clearly. (Decision of the maintainer: same scope as Windows.)
 - **Custom words:** `words.txt`, shared code, same behavior.
@@ -57,7 +57,7 @@ Bring the dictation app to Linux, so that it works the way it does on Windows: p
 | Deepgram | `tungstenite` 0.24, `ureq` 2 | shared |
 | TLS | Linux: `rustls` with the `ring` provider. Windows: unchanged (`native-tls`, SChannel) | no OpenSSL at runtime on Linux; moving Windows to rustls is a separate, later issue |
 | Hotkeys | `ashpd` 0.13 (GlobalShortcuts) | Linux only |
-| Typing | `ashpd` (RemoteDesktop) + `reis` (libei) + `xkbcommon` (character to keycode) | Linux only; check the latest versions when the task starts |
+| Typing | `ashpd` (RemoteDesktop: keysyms, and the Clipboard portal for the paste) | Linux only. libei (`reis`) is not needed: keysyms handle the Arabic layout, libei keycodes do not (S1, S2) |
 | Tray | `ksni` 0.3 (`blocking` feature, no tokio) | pure Rust over D-Bus, no GTK |
 | Notifications | `notify-rust` 4 | Linux only |
 | Paths | `dirs` | XDG config and state folders |
@@ -282,7 +282,7 @@ feature/linux-r1                     │ (after       │
 
 These are answered by short tests on the maintainer's machine, during the work. Each has a decided fallback.
 
-1. **Clipboard on GNOME.** Try the portal Clipboard interface, then the X11 clipboard through XWayland. If neither works: type only, no clipboard copy. The layout fallback then cannot work either, so the app tells the user to switch to English (US) when the text cannot be typed.
+1. **Clipboard on GNOME.** Answered by S2: the Clipboard portal works, through the same RemoteDesktop session, also with Arabic active. The X11 clipboard through XWayland is a working backup. Clipboard history tools may ignore the "do not keep" hint, so the app sets the clipboard once per dictation (`docs/linux-spikes.md`).
 2. **Permission after a reboot.** Answered by S1: yes, GNOME keeps it. The dialog appears only on the first start (`docs/linux-spikes.md`).
 3. **The meter on GNOME.** Does GNOME keep an XWayland override-redirect window above other windows? If not: a GNOME Shell extension.
 4. **Active layout under libei.** Answered by S1: yes, but only at the moment it asks. The app checks it before each dictation. With Arabic active, it pastes from the clipboard; forcing English would type Arabic letters (`docs/linux-spikes.md`).
