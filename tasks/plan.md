@@ -122,7 +122,7 @@ Each task leaves the Windows app building and passing its tests. These tasks cha
 | Moving code to `core/` breaks the Windows app in a way the tests do not catch | High | One module group per task; `cargo check --target x86_64-pc-windows-gnu` locally; CI Windows tests; manual Windows check at Checkpoint B |
 | `main` changes while the branch is open and conflicts with the moved files | Medium | Merge `upstream/main` into the root branch after every change to `rawasmhd`'s `main` (SPEC "Branches and tracking", item 3) |
 | GNOME forgets the typing permission after a reboot | Low | S1 tests it; worst case one dialog per login, documented |
-| The app ID is missing when started from a terminal, so portals misbehave | Medium | T6 registers with `org.freedesktop.host.portal.Registry` first; start with `gtk-launch` |
+| The app ID is missing when started from a terminal, so GNOME saves permissions under the wrong app (seen in S3: under VS Code) | Medium | T6 writes the `.desktop` file, then registers the app ID with `org.freedesktop.host.portal.Registry` before any portal call |
 | The Windows 11 VM behaves differently from a real PC (microphone, hotkeys, start at login) | Medium: a Windows bug could slip through | W1 checks the microphone and hotkeys first; anything the VM cannot test is listed in the release pull request |
 
 ## Decided

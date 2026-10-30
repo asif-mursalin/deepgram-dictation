@@ -1,0 +1,13 @@
+[package]
+name = "hotkeys-spike"
+version = "0.1.0"
+edition = "2021"
+description = "Spike S3: register Alt+M through the GlobalShortcuts portal"
+license = "MIT"
+publish = false
+
+[dependencies]
+# The same ashpd as spikes/typing and spikes/clipboard.
+ashpd = "=0.12.3"
+futures-util = "0.3"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
