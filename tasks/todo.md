@@ -17,6 +17,15 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when: `cargo --version` works, and `cd rust && cargo check --target x86_64-pc-windows-gnu` finishes without errors.
   - Depends on: none
 
+- [ ] **W1: Set up a Windows 11 VM for the Windows checks** (no repo files)
+  - Do:
+    - Create a Windows 11 VM in virt-manager (with TPM and Secure Boot, which Windows 11 needs), using the SPICE display and sound so the microphone is passed through.
+    - Turn off Smart App Control in the VM, because the `.exe` is not signed (#19).
+    - Copy a `.env` with the Deepgram key next to the `.exe`.
+    - Start the app with `explorer.exe`, as in CLAUDE.md.
+  - Done when: the current release `dictation.exe` (from `main`, before any core change) works in the VM. Alt+M, speak, Alt+M types the text into Notepad, and the meter and tray show. That run is the baseline for Checkpoints B and D. Write down anything the VM cannot test.
+  - Depends on: none (needed before Checkpoint B)
+
 - [ ] **S1: Spike: type text through the RemoteDesktop portal and libei** (S, `spikes/typing/`, `docs/linux-spikes.md`)
   - Do: a small program that opens a keyboard-only RemoteDesktop session (`ashpd`), connects to EIS (`reis`), and types "Hello, world." into the focused window after 3 seconds. Save the restore token and reuse it on the next run. Print the keymap layout that libei reports while English (US) is active, then while Arabic is active.
   - Done when: `docs/linux-spikes.md` answers these questions:
@@ -97,7 +106,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 ### Checkpoint B: core done
 - [ ] CI green on Windows and Linux
 - [ ] Test count in `core/` + `rust/` equals the test count in `rust/` before T3
-- [ ] Maintainer runs the CI-built `dictation.exe` on Windows: Alt+M, live paste, Paused, undo, tray, Settings, Custom words
+- [ ] Maintainer runs the CI-built `dictation.exe` in the Windows 11 VM (W1): Alt+M, live paste, Paused, undo, tray, Settings, Custom words
 
 ---
 
@@ -197,7 +206,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 - [ ] **T16: Full regression run, then the release pull request into `main`** (no new code)
   - Do:
     1. Merge `origin/main` into `feature/linux-r1`. CI must be green.
-    2. **Windows:** on a Windows PC, run the CI-built `dictation.exe` and check:
+    2. **Windows:** in the Windows 11 VM (W1), run the CI-built `dictation.exe` and check:
        - Alt+M and live paste
        - Paused
        - Ctrl+Alt+Z

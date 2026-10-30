@@ -49,6 +49,7 @@ T1 Rust toolchain on this machine
 The spikes are throwaway programs in `spikes/<name>/`, each its own small crate. They answer one question each. Keep the code only if a later task can reuse it. S1–S4 depend only on T1 and do not touch shared files, so they can run in parallel with each other and with T2–T5.
 
 - T1: Install the Rust toolchain on this machine
+- W1: Set up a Windows 11 VM for the Windows checks
 - S1: Spike: type text through the RemoteDesktop portal and libei
 - S2: Spike: set the clipboard from the background on GNOME
 - S3: Spike: register Alt+M through the GlobalShortcuts portal
@@ -122,10 +123,13 @@ Each task leaves the Windows app building and passing its tests. These tasks cha
 | `main` changes while the branch is open and conflicts with the moved files | Medium | Merge `origin/main` into the root branch after every change to `main` (SPEC "Branches and tracking", item 3) |
 | GNOME forgets the typing permission after a reboot | Low | S1 tests it; worst case one dialog per login, documented |
 | The app ID is missing when started from a terminal, so portals misbehave | Medium | T6 registers with `org.freedesktop.host.portal.Registry` first; start with `gtk-launch` |
-| No Windows PC at hand for the regression tests | High: blocks the merge into `main` | Maintainer confirms access to a Windows PC before Checkpoint B |
+| The Windows 11 VM behaves differently from a real PC (microphone, hotkeys, start at login) | Medium: a Windows bug could slip through | W1 checks the microphone and hotkeys first; anything the VM cannot test is listed in the release pull request |
+
+## Decided
+
+- The Windows checks (Checkpoints B and D) run in a Windows 11 VM, set up in W1. There is no Windows PC.
 
 ## Open questions
 
-- Is a Windows PC available for the manual Windows checks at Checkpoints B and D? If not, use a Windows 11 VM in virt-manager (the maintainer's account is in the `libvirt` group), with the microphone passed through.
 - Development and the Linux tests run on the maintainer's own GNOME 51 machine, not in a VM: it is the release 1 target, and the app needs no root. VMs are for the Windows checks and for install tests on other distributions (Ubuntu, Fedora, KDE) before release.
 - Should the spikes stay in the repository (`spikes/`) after release 1, or be deleted once `docs/linux-spikes.md` has their results?

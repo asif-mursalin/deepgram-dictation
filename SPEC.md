@@ -251,7 +251,7 @@ feature/linux-r1                     │ (after       │
 3. **Sync often.** The `core/` move changes Windows files, so merge `origin/main` into the root branch (with a pull request) each time `main` changes. Do it right away if the change touches `rust/src`. Then run `cargo build` and `cargo test` in `core/`, `rust/` and `linux/`.
 4. **Nothing goes to `main` until the regression tests pass.** The release pull request from the root branch into `main` is merged only when all of these pass on the root branch:
    - CI: `cargo build --release --locked` and `cargo test --locked` for `core/`, `rust/` and `linux/`, on Windows and Linux.
-   - Windows regression: the Windows app does everything it did before the branch. Check Alt+M, live paste, the Paused state, Ctrl+Alt+Z, the meter, the tray menu, Settings, Custom words, start at login, and Ctrl+Alt+Q on a Windows PC. Run `bench/` and compare the timings with the last result in `bench/results/`.
+   - Windows regression: the Windows app does everything it did before the branch. Check Alt+M, live paste, the Paused state, Ctrl+Alt+Z, the meter, the tray menu, Settings, Custom words, start at login, and Ctrl+Alt+Q in the Windows 11 VM (W1 in `tasks/todo.md`). Run `bench/` and compare the timings with the last result in `bench/results/`.
    - Linux: the manual checklist in Testing Strategy, and the release success criteria.
 5. **Release 1:** after the regression tests pass, one pull request merges the root branch into `main`. The Linux release is tagged from `main`. After that, delete the root branch.
 6. **The release 2 root branch** starts from `main` after release 1 is merged, and works the same way. Its name is chosen then.
