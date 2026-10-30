@@ -72,3 +72,25 @@ The keysym test changes the plan for typing (T8):
 3. **One clipboard entry per dictation.** History tools may ignore the hint, so set the clipboard only once per dictation: the final copy, which is also the paste when the fallback is used.
 4. **Ask for both switches.** The first-start dialog must have "Allow Remote Interaction" and "Allow Clipboard Access" on. `docs/linux.md` must say so.
 5. **Speed not measured.** Each keysym is one D-Bus call (press and release). T8 measures a long dictation (500 characters); if it is too slow, use the clipboard paste for long texts.
+
+## S3: Alt+M through the GlobalShortcuts portal
+
+Program: `spikes/hotkeys` (`ashpd` 0.12.3).
+
+```bash
+cd spikes/hotkeys && cargo build --release
+./target/release/hotkeys-spike                       # no app ID
+./target/release/hotkeys-spike --app-id io.github.rawasmhd.DeepgramDictation
+```
+
+| Question | Result |
+|---|---|
+| Without an app ID: GNOME accepts the request | _pending_ |
+| What GNOME 51 shows the first time | _pending_ |
+| Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q are granted as asked | _pending_ |
+| Presses arrive (and releases) | _pending_ |
+| The second run asks again | _pending_ |
+| With an app ID: the same questions | _pending_ |
+| Alt+M still reaches other apps while bound | _pending_ |
+
+**Conclusion:** _pending_
