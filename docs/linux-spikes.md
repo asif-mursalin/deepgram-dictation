@@ -39,3 +39,28 @@ cd spikes/typing && cargo build --release
 3. If any character cannot be typed on the active layout (for example, Arabic is active), do not type: paste the whole text once from the clipboard (S2 decides how).
 4. Never force a layout: GNOME applies the active layout to the keys, so English text comes out as Arabic letters.
 5. Save the new restore token after every connection (mode 0600).
+
+## S2: the clipboard from the background, and pasting
+
+Program: `spikes/clipboard` (`ashpd` 0.12.3 for the portals, `arboard` 3.7 for X11).
+
+```bash
+cd spikes/clipboard && cargo build --release
+./target/release/clipboard-spike portal          # set the clipboard through the portal; you press Ctrl+V
+./target/release/clipboard-spike portal --paste  # same, and the program presses Ctrl+V
+./target/release/clipboard-spike x11 --paste     # the X11 clipboard through XWayland
+./target/release/clipboard-spike keysym          # no clipboard: type each character as a keysym
+```
+
+| Question | Result |
+|---|---|
+| Portal: the clipboard can be set from the background | _pending_ |
+| Portal: the program's Ctrl+V pastes it (English active) | _pending_ |
+| Portal: Ctrl+V pastes it with Arabic active | _pending_ |
+| X11 through XWayland: the clipboard can be set from the background | _pending_ |
+| X11: the program's Ctrl+V pastes it in a Wayland app (gedit) | _pending_ |
+| Keysym: English text comes out as English with Arabic active | _pending_ |
+| Keysym: characters that are on no layout (é, —) are typed | _pending_ |
+| The "do not keep in history" hint | _pending_ |
+
+**Conclusion:** _pending_
