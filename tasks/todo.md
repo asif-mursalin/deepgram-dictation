@@ -12,7 +12,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 
 ## Phase 0: Setup and spikes
 
-- [ ] **T1: Install the Rust toolchain on this machine** (XS, no repo files)
+- [x] **T1: Install the Rust toolchain on this machine** (XS, no repo files)
   - Do: `sudo pacman -S rustup && rustup default stable && rustup target add x86_64-pc-windows-gnu`. The build packages `alsa-lib`, `libxkbcommon`, `pkgconf` and `pipewire-alsa` are already installed.
   - Done when: `cargo --version` works, and `cd rust && cargo check --target x86_64-pc-windows-gnu` finishes without errors.
   - Depends on: none
