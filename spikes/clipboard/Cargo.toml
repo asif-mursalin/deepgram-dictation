@@ -1,0 +1,15 @@
+[package]
+name = "clipboard-spike"
+version = "0.1.0"
+edition = "2021"
+description = "Spike S2: set the clipboard from the background on GNOME, and paste"
+license = "MIT"
+publish = false
+
+[dependencies]
+# The same ashpd as eitype in spikes/typing, so both use the same portal code.
+ashpd = "=0.12.3"
+# X11 clipboard through XWayland (no default features: no images).
+arboard = { version = "3.7", default-features = false }
+futures-util = "0.3"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }

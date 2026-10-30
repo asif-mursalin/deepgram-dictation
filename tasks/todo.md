@@ -35,7 +35,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - Does the app learn the active layout? (spec open question 4)
   - Depends on: T1
 
-- [ ] **S2: Spike: set the clipboard from the background on GNOME** (S, `spikes/clipboard/`, `docs/linux-spikes.md`)
+- [x] **S2: Spike: set the clipboard from the background on GNOME** (S, `spikes/clipboard/`, `docs/linux-spikes.md`)
   - Do: try the portal Clipboard interface (tied to a RemoteDesktop session), then `arboard` through XWayland. With another window focused, set the text, then press Ctrl+V in gedit.
   - Done when: `docs/linux-spikes.md` names the approach that works, or says neither does (spec open question 1). It also says whether the entry can be marked "do not keep in history".
   - Depends on: T1
@@ -131,20 +131,27 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when: on GNOME with the AppIndicator extension, the icon changes through idle, recording, transcribing and problem, and every menu item works. A Deepgram error with no network shows a notification.
   - Depends on: T6
 
-- [ ] **T8: Type the transcript at the cursor** (M, `linux/src/{typing,keymap,main}.rs`, `linux/Cargo.toml`)
-  - Do: the code from S1, made solid:
-    - Save the restore token in `~/.config/dictation/portal-token`, with mode 0600.
-    - Map each character to a keycode on the active layout (`xkbcommon`).
-    - If any character cannot be typed (Arabic layout, emoji), paste the whole text once with Ctrl+V. That uses the clipboard, so this part waits for T9 if S2 found no working clipboard.
+- [ ] **T8: Type the transcript at the cursor** (M, `linux/src/{typing,main}.rs`, `linux/Cargo.toml`)
+  - Do: one RemoteDesktop portal session for the whole run, with the keyboard and the clipboard (S1, S2):
+    - Save the restore token in `~/.config/dictation/portal-token`, with mode 0600, after every start.
+    - Type with `NotifyKeyboardKeysym` (S2). A new line is the Return keysym.
+    - Decide before typing: if every character is printable ASCII, a space or a new line, type it. Otherwise hand the text to T9's paste. Until T9 lands, log it and type nothing.
+    - Keep the session open; reopen it when a call fails.
+    - Measure a 500-character text. If it is too slow, note it for T9 (paste long texts).
   - Done when:
-    - Alt-free test: `dictation --toggle` twice types the text into gedit, Firefox and GNOME Terminal.
-    - English text with the Arabic layout active does not come out as Arabic letters.
-    - The keymap unit tests pass.
-  - Depends on: T6, S1
+    - Alt-free test: `dictation --toggle` twice types the text into gedit, Firefox and GNOME Terminal, with English and with Arabic active.
+    - The unit tests for the "type or paste" rule and the keysym table pass.
+  - Depends on: T6, S1, S2
 
-- [ ] **T9: One clipboard copy per dictation** (S, `linux/src/{clipboard,main}.rs`)
-  - Do: put the full dictation on the clipboard at the end, with the approach from S2, marked "do not keep in history" where possible. If S2 found none, log once that the clipboard is not available.
-  - Done when: after a dictation, Ctrl+V in another app pastes the full text, and the clipboard history has one entry for it. (Or: the S2 fallback is documented.)
+- [ ] **T9: One clipboard copy per dictation, and the paste fallback** (S, `linux/src/{clipboard,main}.rs`)
+  - Do: the Clipboard portal on T8's session (S2):
+    - Put the full dictation on the clipboard at the end, once.
+    - Answer each `SelectionTransfer` while the app owns the clipboard.
+    - When T8 says "paste", set the clipboard and press Ctrl+V (evdev keycodes 29 and 47). That is the same single entry.
+    - Offer the `x-kde-passwordManagerHint` type too, for history tools that honor it.
+  - Done when:
+    - After a dictation, Ctrl+V in another app pastes the full text, and the clipboard history has one entry for it.
+    - A dictation with "café" pastes correctly with English and with Arabic active.
   - Depends on: T8, S2
 
 - [ ] **T10: Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q through the GlobalShortcuts portal** (S, `linux/src/{hotkey,main}.rs`)

@@ -117,8 +117,8 @@ Each task leaves the Windows app building and passing its tests. These tasks cha
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| The RemoteDesktop portal or libei does not type on GNOME 51 | High: no text at the cursor | S1 first. Fallback: clipboard + Ctrl+V through the portal; last resort ydotool (needs approval, SPEC "Ask first") |
-| `reis` (libei crate) is young and changes its API | Medium | Pin the exact version; keep libei code in `typing.rs` only |
+| The RemoteDesktop portal does not type on GNOME 51 | Resolved by S1 and S2: typing, keysyms and the clipboard all work | — |
+| Typing with keysyms is slow for long dictations (one D-Bus call per key) | Medium | T8 measures 500 characters; long texts can use the clipboard paste (T9) |
 | Moving code to `core/` breaks the Windows app in a way the tests do not catch | High | One module group per task; `cargo check --target x86_64-pc-windows-gnu` locally; CI Windows tests; manual Windows check at Checkpoint B |
 | `main` changes while the branch is open and conflicts with the moved files | Medium | Merge `upstream/main` into the root branch after every change to `rawasmhd`'s `main` (SPEC "Branches and tracking", item 3) |
 | GNOME forgets the typing permission after a reboot | Low | S1 tests it; worst case one dialog per login, documented |
