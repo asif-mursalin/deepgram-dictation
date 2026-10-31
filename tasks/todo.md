@@ -105,8 +105,8 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Depends on: T4
 
 ### Checkpoint B: core done
-- [ ] CI green on Windows and Linux
-- [ ] Test count in `core/` + `rust/` equals the test count in `rust/` before T3: **53 passed, 1 ignored** (CI run 41188124088, 2026-10-31)
+- [x] CI green on Windows and Linux (run 41191261882)
+- [x] Test count in `core/` + `rust/` equals the test count in `rust/` before T3 (after T5: `core/` 53 passed, `rust/` 0): **53 passed, 1 ignored** (CI run 41188124088, 2026-10-31)
 - [ ] Maintainer runs the CI-built `dictation.exe` in the Windows 11 VM (W1): Alt+M, live paste, Paused, undo, tray, Settings, Custom words
 
 ---
