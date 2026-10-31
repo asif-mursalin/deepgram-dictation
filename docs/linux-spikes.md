@@ -59,7 +59,7 @@ cd spikes/clipboard && cargo build --release
 | Portal: Ctrl+V pastes it with Arabic active | Yes: the English text is pasted in English. The first try showed no paste, most likely because the click into gedit came too late; the second try worked, and the log shows gedit reading the clipboard after Ctrl+V |
 | X11 through XWayland: the clipboard can be set from the background | Yes (`DISPLAY=:0`, arboard) |
 | X11: the program's Ctrl+V pastes it in a Wayland app (gedit) | Yes. Mutter shares the X11 clipboard with Wayland apps |
-| Keysym: English text comes out as English with Arabic active | **Yes.** `NotifyKeyboardKeysym` through the RemoteDesktop portal typed "Hello … test." in English while Arabic was active. GNOME finds the key on any configured layout (unlike libei keycodes in S1) |
+| Keysym: English text comes out as English with Arabic active | **Not reliable.** In this spike, `NotifyKeyboardKeysym` typed "Hello … test." in English while Arabic was active. In T8 (the real app, 2026-10-31), the same with Arabic active dropped every letter: only the spaces and apostrophes came through. Treat keysyms as needing English (US) active |
 | Keysym: characters that are on no layout (é, —) are typed | **No.** They are dropped without an error: "café —" came out as "caf " |
 | The "do not keep in history" hint | **Ignored.** The maintainer's Clipboard History extension (`clipboard-history@alexsaveau.dev`) reads `text/plain` right away and keeps the entry; it never asks for `x-kde-passwordManagerHint`. KDE's Klipper honors the hint (not tested here) |
 
@@ -67,7 +67,7 @@ cd spikes/clipboard && cargo build --release
 
 The keysym test changes the plan for typing (T8):
 
-1. **Type with keysyms, not libei keycodes.** `NotifyKeyboardKeysym` through the RemoteDesktop portal types English correctly with Arabic active. libei keycodes (S1) did not. This needs no `reis` and no `xkbcommon`.
+1. **Type with keysyms, not libei keycodes.** `NotifyKeyboardKeysym` through the RemoteDesktop portal needs no `reis` and no `xkbcommon`. *Correction from T8:* with Arabic active it is not reliable (the letters were dropped), so English (US) must be active; another active layout is out of scope for release 1.
 2. **Paste when a character is on no layout.** Keysyms drop such characters (é, —, emoji) without an error, so the app must decide before it types. For release 1 (English dictation, US and Arabic layouts): if every character is printable ASCII, a space or a new line, type it; otherwise paste the whole dictation once with the portal clipboard and Ctrl+V.
 3. **One clipboard entry per dictation.** History tools may ignore the hint, so set the clipboard only once per dictation: the final copy, which is also the paste when the fallback is used.
 4. **Ask for both switches.** The first-start dialog must have "Allow Remote Interaction" and "Allow Clipboard Access" on. `docs/linux.md` must say so.
