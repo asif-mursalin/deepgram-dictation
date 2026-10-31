@@ -61,13 +61,13 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 ### Checkpoint A: spikes done
 - [x] `docs/linux-spikes.md` answers the spec's open questions 1–4
 - [x] SPEC.md is updated where a fallback became the plan
-- [ ] Maintainer review. If S1 failed, stop and re-plan
+- [x] Maintainer review. If S1 failed, stop and re-plan
 
 ---
 
 ## Phase 1: Shared code into `core/`
 
-- [ ] **T2: CI runs on `feature/linux-r1`, with a Linux job** (S, `.github/workflows/ci.yml`)
+- [x] **T2: CI runs on `feature/linux-r1`, with a Linux job** (S, `.github/workflows/ci.yml`)
   - Do: add `feature/linux-r1` to the `push` branches. Add an `ubuntu-24.04` job that installs `pkg-config libasound2-dev libxkbcommon-dev` and runs `cargo build --locked` and `cargo test --locked` in each crate folder that exists (`core/`, `linux/`). Leave the Windows job as it is, but also run `core/` tests there once `core/` exists.
   - Before: turn on GitHub Actions in the fork's **Actions** tab.
   - Done when: a push to `feature/linux-r1` in the fork runs CI, and the Windows job is green.
@@ -106,7 +106,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 
 ### Checkpoint B: core done
 - [ ] CI green on Windows and Linux
-- [ ] Test count in `core/` + `rust/` equals the test count in `rust/` before T3
+- [ ] Test count in `core/` + `rust/` equals the test count in `rust/` before T3: **53 passed, 1 ignored** (CI run 41188124088, 2026-10-31)
 - [ ] Maintainer runs the CI-built `dictation.exe` in the Windows 11 VM (W1): Alt+M, live paste, Paused, undo, tray, Settings, Custom words
 
 ---
