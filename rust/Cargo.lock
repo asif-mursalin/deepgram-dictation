@@ -266,6 +266,7 @@ name = "dictation"
 version = "2.2.0"
 dependencies = [
  "cpal",
+ "dictation-core",
  "embed-resource",
  "hound",
  "native-tls",
@@ -276,6 +277,10 @@ dependencies = [
  "ureq",
  "windows-sys 0.59.0",
 ]
+
+[[package]]
+name = "dictation-core"
+version = "2.2.0"
 
 [[package]]
 name = "digest"

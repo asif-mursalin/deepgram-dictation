@@ -3,7 +3,7 @@
 //! - The version resource (product name and version). Code signing needs
 //!   it (#19): SignPath checks that the product name and version match the
 //!   project and the release.
-//! - The app icon, drawn by `src/art.rs` at every size Windows asks for.
+//! - The app icon, drawn by `core/src/art.rs` at every size Windows asks for.
 //! - The manifest: modern (Common Controls 6) controls, and per-monitor
 //!   DPI awareness.
 //!
@@ -13,10 +13,10 @@
 
 use std::path::{Path, PathBuf};
 
-#[path = "src/gfx.rs"]
+#[path = "../core/src/gfx.rs"]
 #[allow(dead_code)]
 mod gfx;
-#[path = "src/art.rs"]
+#[path = "../core/src/art.rs"]
 #[allow(dead_code)]
 mod art;
 
@@ -48,8 +48,8 @@ const MANIFEST: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=src/art.rs");
-    println!("cargo:rerun-if-changed=src/gfx.rs");
+    println!("cargo:rerun-if-changed=../core/src/art.rs");
+    println!("cargo:rerun-if-changed=../core/src/gfx.rs");
     let out = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let icon = out.join("app.ico");
     std::fs::write(&icon, ico(&ICON_SIZES)).unwrap();
