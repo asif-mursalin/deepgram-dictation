@@ -1,0 +1,22 @@
+[package]
+name = "dictation"
+version = "2.2.0"
+edition = "2021"
+description = "Push-to-talk dictation for Linux (GNOME and KDE on Wayland)"
+license = "MIT"
+publish = false
+
+[dependencies]
+# The code shared with the Windows app (SPEC.md)
+dictation-core = { path = "../core" }
+# XDG portals: the app ID now; the shortcuts, typing and clipboard later (S1-S3)
+ashpd = "=0.12.3"
+# localtime_r, for the time in the log
+libc = "0.2"
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
