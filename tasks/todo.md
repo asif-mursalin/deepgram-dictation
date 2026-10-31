@@ -17,13 +17,9 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when: `cargo --version` works, and `cd rust && cargo check --target x86_64-pc-windows-gnu` finishes without errors.
   - Depends on: none
 
-- [ ] **W1: Set up a Windows 11 VM for the Windows checks** (no repo files)
-  - Do:
-    - Create a Windows 11 VM in virt-manager (with TPM and Secure Boot, which Windows 11 needs), using the SPICE display and sound so the microphone is passed through.
-    - Turn off Smart App Control in the VM, because the `.exe` is not signed (#19).
-    - Copy a `.env` with the Deepgram key next to the `.exe`.
-    - Start the app with `explorer.exe`, as in CLAUDE.md.
-  - Done when: the current release `dictation.exe` (from `main`, before any core change) works in the VM. Alt+M, speak, Alt+M types the text into Notepad, and the meter and tray show. That run is the baseline for Checkpoints B and D. Write down anything the VM cannot test.
+- [x] **W1: Use the maintainer's Windows PC for the Windows checks** (no repo files)
+  - Do: on the Windows PC, keep the current release `dictation.exe` (from `main`) as the baseline. For each check, download the `dictation-exe` artifact of the CI run (GitHub → Actions → the run → Artifacts), quit the running copy (Ctrl+Alt+Q), and start the new one by double-clicking it in Explorer, next to the same `.env` and `words.txt`.
+  - Done when: the PC is ready, with Deepgram key, microphone, and the release `dictation.exe` working.
   - Depends on: none (needed before Checkpoint B)
 
 - [x] **S1: Spike: type text through the RemoteDesktop portal and libei** (S, `spikes/typing/`, `docs/linux-spikes.md`)
@@ -93,7 +89,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - The Windows CI build still finds `.env` and `words.txt` next to the `.exe` (maintainer check).
   - Depends on: T3
 
-- [ ] **T5: Move session and live into `core/`** (M, `core/src/{session,live}.rs`, `rust/src/{main,overlay}.rs`)
+- [x] **T5: Move session and live into `core/`** (M, `core/src/{session,live}.rs`, `rust/src/{main,overlay}.rs`)
   - Do:
     - `pub type WindowId = isize` replaces `HWND` in `session.rs` and `live.rs`.
     - `overlay::State` moves to `core::session::State`, and `rust/src/overlay.rs` uses it from there.
@@ -105,9 +101,9 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Depends on: T4
 
 ### Checkpoint B: core done
-- [ ] CI green on Windows and Linux
-- [ ] Test count in `core/` + `rust/` equals the test count in `rust/` before T3: **53 passed, 1 ignored** (CI run 41188124088, 2026-10-31)
-- [ ] Maintainer runs the CI-built `dictation.exe` in the Windows 11 VM (W1): Alt+M, live paste, Paused, undo, tray, Settings, Custom words
+- [x] CI green on Windows and Linux (run 41191261882)
+- [x] Test count in `core/` + `rust/` equals the test count in `rust/` before T3 (after T5: `core/` 53 passed, `rust/` 0): **53 passed, 1 ignored** (CI run 41188124088, 2026-10-31)
+- [x] Maintainer runs the CI-built `dictation.exe` on the Windows PC (W1): Alt+M, live paste, Paused, undo, tray, Settings, Custom words. All passed, with the build from CI run 41191510061 (2026-10-31)
 
 ---
 
@@ -214,7 +210,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 - [ ] **T16: Full regression run, then the release pull request into `main`** (no new code)
   - Do:
     1. `git fetch upstream` and merge `upstream/main` into `feature/linux-r1`. CI in the fork must be green.
-    2. **Windows:** in the Windows 11 VM (W1), run the CI-built `dictation.exe` and check:
+    2. **Windows:** on the Windows PC (W1), run the CI-built `dictation.exe` and check:
        - Alt+M and live paste
        - Paused
        - Ctrl+Alt+Z

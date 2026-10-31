@@ -4,10 +4,10 @@
 //! another window has focus, new text waits, and the meter shows "Paused".
 //! It is pasted when the user comes back.
 
-use windows_sys::Win32::Foundation::HWND;
+use crate::WindowId;
 
 pub struct LivePaste {
-    window: HWND,
+    window: WindowId,
     /// The part of the transcript that is already pasted.
     pasted: String,
     paused: bool,
@@ -15,7 +15,7 @@ pub struct LivePaste {
 }
 
 impl LivePaste {
-    pub fn new(window: HWND) -> Self {
+    pub fn new(window: WindowId) -> Self {
         LivePaste { window, pasted: String::new(), paused: false, broken: false }
     }
 
@@ -44,7 +44,7 @@ impl LivePaste {
     }
 
     /// The window that had focus at the start.
-    pub fn window(&self) -> HWND {
+    pub fn window(&self) -> WindowId {
         self.window
     }
 
@@ -69,7 +69,7 @@ mod tests {
     use super::*;
 
     fn live() -> LivePaste {
-        LivePaste::new(std::ptr::null_mut())
+        LivePaste::new(0)
     }
 
     #[test]
