@@ -10,6 +10,7 @@ use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows_sys::Win32::UI::HiDpi::*;
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
+pub use dictation_core::session::State;
 use crate::gfx::{self, byte, mix, Rgb};
 
 // Layout in logical pixels (96 dpi). The window is larger than the panel
@@ -47,13 +48,6 @@ const ERR_RED: Rgb = [255.0, 107.0, 107.0];
 const ERR_TEXT: Rgb = [255.0, 138.0, 138.0];
 const OK_TEAL: Rgb = [56.0, 189.0, 160.0];
 const PAUSE_AMBER: Rgb = [245.0, 185.0, 66.0];
-
-pub enum State {
-    Hidden,
-    Recording,
-    Working,
-    Notice { text: String, error: bool },
-}
 
 pub struct Overlay {
     hwnd: HWND,

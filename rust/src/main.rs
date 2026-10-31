@@ -15,11 +15,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod config;
-mod live;
 mod logging;
 mod overlay;
 mod paste;
-mod session;
 mod setup;
 mod theme;
 mod tray;
@@ -27,7 +25,8 @@ mod typing;
 mod words_window;
 
 // The icons and the drawing code, shared with the Linux app.
-use dictation_core::{art, audio, deepgram, gfx, words};
+use dictation_core::session::{self, Host, Session, Transcript};
+use dictation_core::{art, audio, deepgram, gfx, words, WindowId};
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc::Sender;
@@ -42,7 +41,6 @@ use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 use art::Dot;
 use overlay::{wide, Overlay, State, TIMER_FRAME};
-use session::{Host, Session, Transcript};
 use tray::{Tray, WM_TRAY};
 use words::Words;
 
@@ -430,8 +428,8 @@ impl Host for Desktop {
         });
     }
 
-    fn foreground(&self) -> HWND {
-        unsafe { GetForegroundWindow() }
+    fn foreground(&self) -> WindowId {
+        unsafe { GetForegroundWindow() as WindowId }
     }
 
     fn paste(&mut self, text: &str) -> bool {

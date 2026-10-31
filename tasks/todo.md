@@ -93,7 +93,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - The Windows CI build still finds `.env` and `words.txt` next to the `.exe` (maintainer check).
   - Depends on: T3
 
-- [ ] **T5: Move session and live into `core/`** (M, `core/src/{session,live}.rs`, `rust/src/{main,overlay}.rs`)
+- [x] **T5: Move session and live into `core/`** (M, `core/src/{session,live}.rs`, `rust/src/{main,overlay}.rs`)
   - Do:
     - `pub type WindowId = isize` replaces `HWND` in `session.rs` and `live.rs`.
     - `overlay::State` moves to `core::session::State`, and `rust/src/overlay.rs` uses it from there.

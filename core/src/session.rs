@@ -8,16 +8,22 @@
 use std::mem;
 use std::sync::mpsc::Sender;
 
-use windows_sys::Win32::Foundation::HWND;
-
 use crate::audio::{self, SAMPLE_RATE};
 use crate::deepgram;
 use crate::live::LivePaste;
 use crate::log;
-use crate::overlay::State;
 use crate::words::Words;
+use crate::WindowId;
 
 const MIN_SECONDS: f32 = 0.4; // ignore accidental taps
+
+/// What the meter shows. The app draws it (on Windows, `overlay.rs`).
+pub enum State {
+    Hidden,
+    Recording,
+    Working,
+    Notice { text: String, error: bool },
+}
 
 /// The text of a dictation, or why there is none.
 pub type Transcript = Result<String, deepgram::Error>;
@@ -67,7 +73,7 @@ pub trait Host {
     // -- the target window
 
     /// The window that has focus.
-    fn foreground(&self) -> HWND;
+    fn foreground(&self) -> WindowId;
     /// Paste at the cursor. False if the clipboard was busy.
     fn paste(&mut self, text: &str) -> bool;
     /// Delete `count` characters before the cursor.
@@ -90,7 +96,7 @@ pub trait Host {
 /// The last dictation, for undo: how many characters, and where.
 struct Delivery {
     chars: usize,
-    window: HWND,
+    window: WindowId,
 }
 
 enum Phase<S> {
@@ -262,7 +268,7 @@ impl<H: Host> Session<H> {
         }
     }
 
-    fn remember(&mut self, chars: usize, window: HWND) {
+    fn remember(&mut self, chars: usize, window: WindowId) {
         self.last = (chars > 0).then_some(Delivery { chars, window });
         self.host.reset_typing();
     }
@@ -296,8 +302,8 @@ mod tests {
 
     use super::*;
 
-    const EDITOR: HWND = 1 as HWND;
-    const OTHER: HWND = 2 as HWND;
+    const EDITOR: WindowId = 1;
+    const OTHER: WindowId = 2;
 
     struct FakeRecording(Vec<i16>);
 
@@ -322,7 +328,7 @@ mod tests {
         /// The length of the next recording.
         seconds: f32,
         mic_ok: bool,
-        focus: HWND,
+        focus: WindowId,
         typed: bool,
         clipboard_ok: bool,
         live: Rc<RefCell<String>>,
@@ -388,7 +394,7 @@ mod tests {
             self.finished.push(samples);
         }
 
-        fn foreground(&self) -> HWND {
+        fn foreground(&self) -> WindowId {
             self.focus
         }
 
