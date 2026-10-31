@@ -153,9 +153,11 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - Known: with live paste, a phrase that needs the paste is its own clipboard entry, before the final one.
   - Depends on: T8, S2
 
-- [ ] **T10: Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q through the GlobalShortcuts portal** (S, `linux/src/{hotkey,main}.rs`)
+- [x] **T10: Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q through the GlobalShortcuts portal** (S, `linux/src/{hotkey,control,main}.rs`)
   - Do: bind the three shortcuts with preferred triggers (`ALT+m`, `CTRL+ALT+z`, `CTRL+ALT+q`), under the app ID from T6. GNOME remembers the permission per app ID, so the dialog appears only once (S3). If no press arrives after the first dialog, rebind once. If the portal is missing, log it, and keep `--toggle` working.
   - Done when: after the first dialog, Alt+M starts and stops a dictation from any app, Ctrl+Alt+Q quits, and a restart does not show the dialog again.
+  - Result (2026-10-31): the dialog showed once; the app bound again after it (16 ms), and Alt+M, Ctrl+Alt+Z and Ctrl+Alt+Q worked right away in gedit. A restart bound in 102 ms without the dialog.
+    - Ctrl+Alt+Z also sends `undo` (and `dictation --undo`) to the session's existing undo; it deleted a 78-character dictation in gedit. T11 checks it in Firefox.
   - Depends on: T6 (app ID and `.desktop` file), S3
 
 - [ ] **T11: Undo with Ctrl+Alt+Z** (S, `linux/src/{typing,main}.rs`)

@@ -2,6 +2,7 @@
 //!
 //!   dictation            start the app (only one copy runs)
 //!   dictation --toggle   start or stop a dictation in the running app
+//!   dictation --undo     delete the last dictation
 //!   dictation --quit     quit the running app
 //!
 //! The dictation itself (`dictation_core::session`) is the same as on
@@ -13,6 +14,7 @@
 mod clipboard;
 mod control;
 mod desktop;
+mod hotkey;
 mod paths;
 mod typing;
 
@@ -51,9 +53,10 @@ fn main() {
     let command = match std::env::args().nth(1).as_deref() {
         None => None,
         Some("--toggle") => Some(Command::Toggle),
+        Some("--undo") => Some(Command::Undo),
         Some("--quit") => Some(Command::Quit),
         Some(other) => {
-            eprintln!("dictation: unknown argument {other}\nusage: dictation [--toggle | --quit]");
+            eprintln!("dictation: unknown argument {other}\nusage: dictation [--toggle | --undo | --quit]");
             std::process::exit(2);
         }
     };
@@ -121,11 +124,13 @@ fn run(paths: &Paths) -> Result<(), String> {
 
     let (events, rx) = mpsc::channel();
     control::forward(listener, events.clone(), Event::Command);
+    hotkey::listen(&portals, events.clone(), Event::Command);
     let linux = Linux { key, events, portals, typer, copy: clipboard::Pending::default() };
     let mut session = Session::new(linux, Words::new());
     loop {
         match rx.recv_timeout(LIVE_CHECK) {
             Ok(Event::Command(Command::Toggle)) => session.toggle(),
+            Ok(Event::Command(Command::Undo)) => session.undo(),
             Ok(Event::Command(Command::Quit)) => break,
             Ok(Event::LiveText) => session.live_step(),
             Ok(Event::Transcript(result)) => {

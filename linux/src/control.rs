@@ -1,4 +1,4 @@
-//! One copy of the app, and `dictation --toggle` / `--quit`.
+//! One copy of the app, and `dictation --toggle` / `--undo` / `--quit`.
 //!
 //! The running app listens on a Unix socket. A second start finds the
 //! socket taken and exits; `--toggle` and `--quit` send one line to it.
@@ -13,6 +13,8 @@ use std::thread;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Command {
     Toggle,
+    /// Delete the last dictation (Ctrl+Alt+Z).
+    Undo,
     Quit,
 }
 
@@ -20,6 +22,7 @@ impl Command {
     fn line(self) -> &'static str {
         match self {
             Command::Toggle => "toggle",
+            Command::Undo => "undo",
             Command::Quit => "quit",
         }
     }
@@ -27,6 +30,7 @@ impl Command {
     fn parse(line: &str) -> Option<Command> {
         match line.trim() {
             "toggle" => Some(Command::Toggle),
+            "undo" => Some(Command::Undo),
             "quit" => Some(Command::Quit),
             _ => None,
         }
@@ -95,7 +99,7 @@ mod tests {
 
     #[test]
     fn commands_round_trip() {
-        for command in [Command::Toggle, Command::Quit] {
+        for command in [Command::Toggle, Command::Undo, Command::Quit] {
             assert_eq!(Command::parse(command.line()), Some(command));
         }
         assert_eq!(Command::parse("toggle\n"), Some(Command::Toggle));
