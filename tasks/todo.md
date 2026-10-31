@@ -109,7 +109,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 
 ## Phase 2: Linux app, end to end
 
-- [ ] **T6: Linux skeleton: `dictation --toggle` records, transcribes, writes the text to the log** (M, `linux/Cargo.toml`, `linux/src/{main,paths,control}.rs`)
+- [x] **T6: Linux skeleton: `dictation --toggle` records, transcribes, writes the text to the log** (M, `linux/Cargo.toml`, `linux/src/{main,paths,control}.rs`)
   - Do:
     - A binary crate `dictation` that depends on `core/` and uses rustls for `tungstenite` and `ureq`.
     - XDG paths: config in `~/.config/dictation/`, log in `~/.local/state/dictation/`.
