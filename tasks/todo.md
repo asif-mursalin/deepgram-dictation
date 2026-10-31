@@ -61,7 +61,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
 ### Checkpoint A: spikes done
 - [x] `docs/linux-spikes.md` answers the spec's open questions 1–4
 - [x] SPEC.md is updated where a fallback became the plan
-- [ ] Maintainer review. If S1 failed, stop and re-plan
+- [x] Maintainer review. If S1 failed, stop and re-plan
 
 ---
 

@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # feature/linux-r1 is the root branch of the Linux work (SPEC.md)
+    branches: [main, feature/linux-r1]
   pull_request:
 
 jobs:
@@ -29,11 +30,48 @@ jobs:
       - name: Run tests
         run: cargo test --locked
 
+      # the shared code (SPEC.md); skipped until core/ exists
+      - name: Test core
+        if: hashFiles('core/Cargo.toml') != ''
+        working-directory: core
+        run: cargo test --locked
+
       - name: Upload dictation.exe
         uses: actions/upload-artifact@v7
         with:
           name: dictation-exe
           path: rust/target/release/dictation.exe
+
+  linux:
+    # the Linux app and the shared code; each folder is skipped until it exists
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cache cargo
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core/target
+            linux/target
+          key: rust-${{ runner.os }}-${{ hashFiles('core/Cargo.lock', 'linux/Cargo.lock') }}
+
+      - name: Install build packages
+        # cpal needs ALSA
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libasound2-dev
+
+      - name: Build and test
+        run: |
+          set -euo pipefail
+          for crate in core linux; do
+            if [ -f "$crate/Cargo.toml" ]; then
+              (cd "$crate" && cargo build --locked && cargo test --locked)
+            else
+              echo "$crate/ does not exist yet: skipped"
+            fi
+          done
 
   bench:
     # the benchmark needs a desktop and a Deepgram key, so CI only compiles it
