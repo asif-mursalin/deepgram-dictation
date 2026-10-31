@@ -127,7 +127,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when: on GNOME with the AppIndicator extension, the icon changes through idle, recording, transcribing and problem, and every menu item works. A Deepgram error with no network shows a notification.
   - Depends on: T6
 
-- [ ] **T8: Type the transcript at the cursor** (M, `linux/src/{typing,main}.rs`, `linux/Cargo.toml`)
+- [x] **T8: Type the transcript at the cursor** (M, `linux/src/{typing,main}.rs`, `linux/Cargo.toml`)
   - Do: one RemoteDesktop portal session for the whole run, with the keyboard and the clipboard (S1, S2):
     - Save the restore token in `~/.config/dictation/portal-token`, with mode 0600, after every start.
     - Type with `NotifyKeyboardKeysym` (S2). A new line is the Return keysym.
@@ -135,7 +135,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - Keep the session open; reopen it when a call fails.
     - Measure a 500-character text. If it is too slow, note it for T9 (paste long texts).
   - Done when:
-    - Alt-free test: `dictation --toggle` twice types the text into gedit, Firefox and GNOME Terminal, with English and with Arabic active.
+    - Alt-free test: `dictation --toggle` twice types the text into gedit, Firefox and GNOME Terminal, with English (US) active. (Arabic active is out of scope for release 1: keysyms drop the letters, see SPEC.md.)
     - The unit tests for the "type or paste" rule and the keysym table pass.
   - Depends on: T6, S1, S2
 
@@ -147,7 +147,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - Offer the `x-kde-passwordManagerHint` type too, for history tools that honor it.
   - Done when:
     - After a dictation, Ctrl+V in another app pastes the full text, and the clipboard history has one entry for it.
-    - A dictation with "café" pastes correctly with English and with Arabic active.
+    - A dictation with "café" pastes correctly with English (US) active.
   - Depends on: T8, S2
 
 - [ ] **T10: Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q through the GlobalShortcuts portal** (S, `linux/src/{hotkey,main}.rs`)

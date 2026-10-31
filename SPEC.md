@@ -23,7 +23,7 @@ Bring the dictation app to Linux, so that it works the way it does on Windows: p
 - **Ctrl+Alt+Q** quits.
 - Streaming transcription with Deepgram, with the batch fallback, exactly as on Windows (shared code).
 - **Text at the cursor:** the app types the text into the window that has focus, through the RemoteDesktop portal with libei. The first start asks for permission once. The app saves the restore token, so it does not ask again.
-- **Keyboard layouts:** the maintainer uses English (US) and Arabic. The app types with keysyms through the RemoteDesktop portal, which gives English letters even while Arabic is active (S2). Characters that are on no layout (é, —, emoji) would be dropped, so if the text has any character other than printable ASCII, a space or a new line, the app pastes the whole dictation once from the clipboard with Ctrl+V. It never types English text as Arabic letters.
+- **Keyboard layouts:** the app types with keysyms through the RemoteDesktop portal, which needs **English (US) as the active layout**. With another layout active (for example Arabic), GNOME drops the English letters (T8). Dictating with a non-English layout active is out of scope for release 1; `docs/linux.md` tells the user to switch to English while dictating. Characters that are on no layout (é, —, emoji) would be dropped too, so if the text has any character other than printable ASCII, a space or a new line, the app pastes the whole dictation once from the clipboard with Ctrl+V (T9).
 - **Clipboard:** one copy of the full dictation goes on the clipboard at the end, as on Windows, so Ctrl+V pastes it again. Phrases are typed, not pasted, so the clipboard history gets at most one entry per dictation. If GNOME does not let a background app set the clipboard, the text is only typed (see Open Questions, item 1).
 - **Undo (Ctrl+Alt+Z):** works as on Windows: it deletes the last dictation with Backspace. On GNOME, the app cannot see that the user typed or switched windows after the dictation, so undo cannot cancel itself there. The README must say this clearly. (Decision of the maintainer: same scope as Windows.)
 - **Custom words:** `words.txt`, shared code, same behavior.
@@ -46,6 +46,7 @@ Bring the dictation app to Linux, so that it works the way it does on Windows: p
 - A GNOME Shell extension, unless the meter test needs one (Release 2).
 - Flatpak, AppImage, `.deb` and `.rpm` (later issues).
 - macOS (#1).
+- Dictating while a non-English keyboard layout is active (for example Arabic). The Windows app handles it because it always pastes with Ctrl+V; the Linux app could do the same later, at the cost of one clipboard entry per phrase.
 - Changes to what the Windows app does.
 
 ## Tech Stack
@@ -272,7 +273,7 @@ feature/linux-r1                     │ (after       │
 - Undo: same scope as Windows. On GNOME it cannot cancel itself after typing; the docs say so.
 - Clipboard: one copy of the full dictation per dictation. No clipboard copy per phrase.
 - Meter and tray icon both, on GNOME too.
-- Keyboard layouts: English (US) and Arabic. Fall back to one clipboard paste when the active layout cannot type the text.
+- Keyboard layouts: English (US) must be active while dictating on Linux. Arabic (or any other layout) active is out of scope for release 1 (decided 2026-10-31, after T8 showed that keysyms drop English letters with Arabic active). Texts with characters on no layout are pasted once from the clipboard.
 - Windows keeps its current TLS (SChannel). The official `.exe` is built by CI with MSVC.
 - One root branch per release. Release 1 uses `feature/linux-r1`. The `core/` move goes into it, not straight into `main`.
 - Nothing merges into `main` until the regression tests pass (Branches and tracking, item 4).

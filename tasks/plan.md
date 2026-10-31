@@ -78,6 +78,8 @@ Each task leaves the Windows app building and passing its tests. These tasks cha
 
 ### Phase 2: Linux app, end to end
 
+Order (decided 2026-10-31): the functions first, the tray last: T6, T8, T9, T10, T11, then T7.
+
 - T6: Linux skeleton: `dictation --toggle` records, transcribes, writes the text to the log
 - T7: Tray icon and menu, and notifications
 - T8: Type the transcript at the cursor

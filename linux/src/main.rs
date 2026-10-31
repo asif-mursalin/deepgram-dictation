@@ -6,16 +6,17 @@
 //!
 //! The dictation itself (`dictation_core::session`) is the same as on
 //! Windows. This file has the start, the event loop, and the `Host` that
-//! connects the session to Linux. For now the text goes only to the log;
-//! typing it at the cursor comes next (tasks/todo.md, T8).
+//! connects the session to Linux: the text is typed at the cursor through
+//! the RemoteDesktop portal (`typing.rs`).
 
 mod control;
 mod desktop;
 mod paths;
+mod typing;
 
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use dictation_core::session::{self, Host, Session, State, Transcript};
 use dictation_core::words::{self, Words};
@@ -23,6 +24,7 @@ use dictation_core::{audio, deepgram, env, log, WindowId};
 
 use control::Command;
 use paths::Paths;
+use typing::{Delivery, Typer};
 
 /// Check live paste this often while recording, as the Windows app does
 /// (8 frames of 33 ms).
@@ -100,6 +102,12 @@ fn run(paths: &Paths) -> Result<(), String> {
         Err(e) => log(&format!("could not register the app ID: {e}")),
     }
 
+    // Open the typing session now: the first start shows GNOME's dialog.
+    let mut typer = Typer::new(paths.config.join("portal-token"));
+    if let Err(e) = typer.connect(&portals) {
+        log(&format!("typing not ready: {e}"));
+    }
+
     words::set_dir(paths.config.clone());
     let key = env::api_key(&[paths.config.clone()])
         .ok_or_else(|| format!("no API key: put DEEPGRAM_API_KEY=... in {}", paths.config.join(".env").display()))?;
@@ -111,7 +119,7 @@ fn run(paths: &Paths) -> Result<(), String> {
 
     let (events, rx) = mpsc::channel();
     control::forward(listener, events.clone(), Event::Command);
-    let mut session = Session::new(Linux { key, events }, Words::new());
+    let mut session = Session::new(Linux { key, events, portals, typer }, Words::new());
     loop {
         match rx.recv_timeout(LIVE_CHECK) {
             Ok(Event::Command(Command::Toggle)) => session.toggle(),
@@ -151,11 +159,14 @@ fn now() -> String {
     )
 }
 
-/// The session's link to Linux: the microphone and Deepgram for real; the
-/// text, the meter and the tray only in the log until T7 and T8.
+/// The session's link to Linux: the microphone, Deepgram and typing for
+/// real; the meter and the tray only in the log until T7.
 struct Linux {
     key: String,
     events: Sender<Event>,
+    /// Runs the portal calls, and keeps their D-Bus connection.
+    portals: tokio::runtime::Runtime,
+    typer: Typer,
 }
 
 impl Host for Linux {
@@ -193,14 +204,32 @@ impl Host for Linux {
         FOCUSED_WINDOW
     }
 
-    // T8 types the text at the cursor. Until then it goes to the log.
+    /// Type the text. False if it could not reach the cursor.
     fn paste(&mut self, text: &str) -> bool {
-        log(&format!("text: {text}"));
-        true
+        let started = Instant::now();
+        match typing::delivery(text) {
+            Delivery::Type => match self.typer.type_text(&self.portals, text) {
+                Ok(()) => {
+                    log(&format!("typed {} characters in {} ms", text.chars().count(), started.elapsed().as_millis()));
+                    true
+                }
+                Err(e) => {
+                    log(&format!("typing failed: {e}"));
+                    false
+                }
+            },
+            // T9 pastes such a text from the clipboard.
+            Delivery::Paste => {
+                log("this text needs the clipboard paste, which is not there yet (T9)");
+                false
+            }
+        }
     }
 
     fn backspaces(&mut self, count: usize) {
-        log(&format!("undo: {count} backspaces (not sent yet)"));
+        if let Err(e) = self.typer.backspaces(&self.portals, count) {
+            log(&format!("undo failed: {e}"));
+        }
     }
 
     /// GNOME does not tell an app that the user typed (SPEC.md).
