@@ -100,3 +100,25 @@ cd spikes/hotkeys && cargo build --release
 3. **The dialog says "globally".** `docs/linux.md` explains what it is and that the keys can be changed in GNOME Settings.
 
 Clean-up after the test: the temporary `.desktop` file and the saved shortcuts (under `com.microsoft.VSCode` and under our ID) were removed.
+
+## S4: a meter window on top, through XWayland
+
+Program: `spikes/meter` (`x11rb` 0.14 with the `shape` extension). A 320×48 override-redirect window with a 32-bit ARGB visual and an empty input shape, at the bottom center, with moving level bars.
+
+```bash
+cd spikes/meter && cargo build --release
+./target/release/meter-spike              # click-through
+./target/release/meter-spike --solid      # clicks hit the meter, to compare
+```
+
+| Question | Result |
+|---|---|
+| The meter appears, with see-through rounded ends | _pending_ |
+| It stays on top when gedit (native Wayland) is clicked and used | _pending_ |
+| It stays on top when Firefox is clicked and used | _pending_ |
+| It never takes the focus (typing goes on in gedit) | _pending_ |
+| Clicks pass through to the window below | _pending_ |
+| It is sharp, not blurry (display scaling) | _pending_ |
+| It shows on the screen with the cursor (several monitors) | _pending_ |
+
+**Conclusion:** _pending_
