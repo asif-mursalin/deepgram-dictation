@@ -73,7 +73,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when: a push to `feature/linux-r1` in the fork runs CI, and the Windows job is green.
   - Depends on: none
 
-- [ ] **T3: Create `core/` with gfx and art** (M, `core/Cargo.toml`, `core/src/{lib,gfx,art}.rs`, `rust/Cargo.toml`, `rust/build.rs`, `rust/src/main.rs`)
+- [x] **T3: Create `core/` with gfx and art** (M, `core/Cargo.toml`, `core/src/{lib,gfx,art}.rs`, `rust/Cargo.toml`, `rust/build.rs`, `rust/src/main.rs`)
   - Do: a library crate `dictation-core`. Move `gfx.rs` and `art.rs` with their tests. `rust/` uses `dictation_core::{gfx, art}`. `build.rs` points its `#[path]` at `../core/src/`.
   - Done when:
     - The `gfx` and `art` tests pass in `core/` on Linux.

@@ -1,0 +1,10 @@
+[package]
+name = "dictation-core"
+version = "2.2.0"
+edition = "2021"
+description = "The code that the Windows and Linux apps share: no Windows or Linux calls"
+license = "MIT"
+publish = false
+
+[lib]
+name = "dictation_core"
