@@ -1,0 +1,11 @@
+[package]
+name = "meter-spike"
+version = "0.1.0"
+edition = "2021"
+description = "Spike S4: does an XWayland override-redirect window stay on top on GNOME"
+license = "MIT"
+publish = false
+
+[dependencies]
+# X11 through XWayland: the "shape" extension makes the window click-through.
+x11rb = { version = "0.14", features = ["shape"] }

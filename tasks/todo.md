@@ -48,7 +48,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - whether Alt+M is accepted or GNOME proposes another key.
   - Depends on: T1
 
-- [ ] **S4: Spike: does an XWayland override-redirect window stay on top on GNOME** (S, `spikes/meter/`, `docs/linux-spikes.md`)
+- [x] **S4: Spike: does an XWayland override-redirect window stay on top on GNOME** (S, `spikes/meter/`, `docs/linux-spikes.md`)
   - Do: with `x11rb`, open a 320×48 ARGB override-redirect window at the bottom center, with an empty input shape. Click and type in a native Wayland app (gedit) under it, and in Firefox.
   - Done when: `docs/linux-spikes.md` records:
     - whether the window stays on top;
@@ -59,8 +59,8 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Depends on: T1
 
 ### Checkpoint A: spikes done
-- [ ] `docs/linux-spikes.md` answers the spec's open questions 1–4
-- [ ] SPEC.md is updated where a fallback became the plan
+- [x] `docs/linux-spikes.md` answers the spec's open questions 1–4
+- [x] SPEC.md is updated where a fallback became the plan
 - [ ] Maintainer review. If S1 failed, stop and re-plan
 
 ---
