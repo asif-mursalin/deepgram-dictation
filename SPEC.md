@@ -35,7 +35,7 @@ Bring the dictation app to Linux, so that it works the way it does on Windows: p
 
 ### Release 2: parity (Linux 0.2)
 
-- **Floating meter** with the level, timer and the "Transcribing" animation. The maintainer wants both the meter and the tray icon. First try an X11 window through XWayland (override-redirect, ARGB, click-through). If GNOME does not keep it on top, build a small GNOME Shell extension that draws the meter, fed by the app over D-Bus (Open Questions, item 3).
+- **Floating meter** with the level, timer and the "Transcribing" animation. The maintainer wants both the meter and the tray icon. First try an X11 window through XWayland (override-redirect, ARGB, click-through). S4 showed that GNOME keeps it on top, so no GNOME Shell extension is needed (Open Questions, item 3).
 - **Setup window** and **Custom words window** in GTK4 with libadwaita. They run as short-lived processes (`dictation --setup`, `dictation --words`), so the running app never loads GTK and stays small.
 - **Live paste:** each phrase is typed while the user speaks. On GNOME it goes to whatever window has focus, because the app cannot see which window had focus at the start. No "Paused" state on GNOME.
 - **Light and dark mode** from the Settings portal (`color-scheme`), for the meter and the tray icon.
@@ -284,5 +284,5 @@ These are answered by short tests on the maintainer's machine, during the work. 
 
 1. **Clipboard on GNOME.** Answered by S2: the Clipboard portal works, through the same RemoteDesktop session, also with Arabic active. The X11 clipboard through XWayland is a working backup. Clipboard history tools may ignore the "do not keep" hint, so the app sets the clipboard once per dictation (`docs/linux-spikes.md`).
 2. **Permission after a reboot.** Answered by S1: yes, GNOME keeps it. The dialog appears only on the first start (`docs/linux-spikes.md`).
-3. **The meter on GNOME.** Does GNOME keep an XWayland override-redirect window above other windows? If not: a GNOME Shell extension.
+3. **The meter on GNOME.** Answered by S4: yes. An XWayland override-redirect window stays on top, never takes the focus and lets clicks through, so no GNOME Shell extension is needed. Fractional scaling and several monitors are still to check (`docs/linux-spikes.md`).
 4. **Active layout under libei.** Answered by S1: yes, but only at the moment it asks. The app checks it before each dictation. With Arabic active, it pastes from the clipboard; forcing English would type Arabic letters (`docs/linux-spikes.md`).

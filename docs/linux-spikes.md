@@ -113,12 +113,16 @@ cd spikes/meter && cargo build --release
 
 | Question | Result |
 |---|---|
-| The meter appears, with see-through rounded ends | _pending_ |
-| It stays on top when gedit (native Wayland) is clicked and used | _pending_ |
-| It stays on top when Firefox is clicked and used | _pending_ |
-| It never takes the focus (typing goes on in gedit) | _pending_ |
-| Clicks pass through to the window below | _pending_ |
-| It is sharp, not blurry (display scaling) | _pending_ |
-| It shows on the screen with the cursor (several monitors) | _pending_ |
+| The meter appears, with see-through rounded ends | Yes (screenshot over Firefox). X screen 1920×1080, meter at 800,936 |
+| It stays on top when gedit (native Wayland) is clicked and used | Yes |
+| It stays on top when Firefox is clicked and used | Yes |
+| It never takes the focus (typing goes on in gedit) | Yes: the meter got no focus event in 90 s |
+| Clicks pass through to the window below | Yes: clicks on the meter reached the window below, and the meter got no click event |
+| It is sharp, not blurry (display scaling) | Yes at 100 % scaling. Not tested with fractional scaling, where XWayland windows can be blurry |
+| It shows on the screen with the cursor (several monitors) | Not tested (one monitor). The X screen spans all monitors, so release 2 must pick the monitor itself |
 
-**Conclusion:** _pending_
+**Conclusion:** an XWayland override-redirect window works as the meter on GNOME 51: it stays above native Wayland windows, never takes the focus, lets clicks through, and looks sharp at 100 % scaling. Open question 3 in SPEC.md is answered: release 2 needs **no GNOME Shell extension**. For release 2:
+
+1. Draw with the existing `core::gfx` code into a premultiplied BGRA image, as the spike does.
+2. Check fractional scaling (for example 125 %) and two monitors before release 2.
+3. It needs XWayland, which GNOME starts on demand. If XWayland is missing, show the state only in the tray.
