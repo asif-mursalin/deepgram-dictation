@@ -7,8 +7,10 @@
 //! The dictation itself (`dictation_core::session`) is the same as on
 //! Windows. This file has the start, the event loop, and the `Host` that
 //! connects the session to Linux: the text is typed at the cursor through
-//! the RemoteDesktop portal (`typing.rs`).
+//! the RemoteDesktop portal (`typing.rs`), and each dictation goes on the
+//! clipboard once (`clipboard.rs`).
 
+mod clipboard;
 mod control;
 mod desktop;
 mod paths;
@@ -119,17 +121,24 @@ fn run(paths: &Paths) -> Result<(), String> {
 
     let (events, rx) = mpsc::channel();
     control::forward(listener, events.clone(), Event::Command);
-    let mut session = Session::new(Linux { key, events, portals, typer }, Words::new());
+    let linux = Linux { key, events, portals, typer, copy: clipboard::Pending::default() };
+    let mut session = Session::new(linux, Words::new());
     loop {
         match rx.recv_timeout(LIVE_CHECK) {
             Ok(Event::Command(Command::Toggle)) => session.toggle(),
             Ok(Event::Command(Command::Quit)) => break,
             Ok(Event::LiveText) => session.live_step(),
-            Ok(Event::Transcript(result)) => session.on_transcript(result),
+            Ok(Event::Transcript(result)) => {
+                session.on_transcript(result);
+                session.host_mut().copy.done();
+                session.host_mut().copy_now();
+            }
             Err(RecvTimeoutError::Timeout) => {
                 if session.recording() {
                     session.live_step();
                 }
+                // after a paste, the copy waits for the target app to read it
+                session.host_mut().copy_now();
             }
             Err(RecvTimeoutError::Disconnected) => break,
         }
@@ -159,14 +168,28 @@ fn now() -> String {
     )
 }
 
-/// The session's link to Linux: the microphone, Deepgram and typing for
-/// real; the meter and the tray only in the log until T7.
+/// The session's link to Linux: the microphone, Deepgram, typing and the
+/// clipboard for real; the meter and the tray only in the log until T7.
 struct Linux {
     key: String,
     events: Sender<Event>,
     /// Runs the portal calls, and keeps their D-Bus connection.
     portals: tokio::runtime::Runtime,
     typer: Typer,
+    /// The dictation's text, for the clipboard when it is done.
+    copy: clipboard::Pending,
+}
+
+impl Linux {
+    /// The dictation is done: put its text on the clipboard, once. A
+    /// clipboard history gets one entry per dictation (SPEC.md).
+    fn copy_now(&mut self) {
+        let Some(text) = self.copy.take(Instant::now()) else { return };
+        match self.typer.copy(&self.portals, &text) {
+            Ok(()) => log(&format!("copied {} characters", text.chars().count())),
+            Err(e) => log(&format!("copy failed: {e}")),
+        }
+    }
 }
 
 impl Host for Linux {
@@ -204,23 +227,29 @@ impl Host for Linux {
         FOCUSED_WINDOW
     }
 
-    /// Type the text. False if it could not reach the cursor.
+    /// Type the text, or paste it if it has a character that cannot be
+    /// typed. False if it could not reach the cursor. Either way, the text
+    /// goes on the clipboard when the dictation is done.
     fn paste(&mut self, text: &str) -> bool {
         let started = Instant::now();
-        match typing::delivery(text) {
-            Delivery::Type => match self.typer.type_text(&self.portals, text) {
-                Ok(()) => {
-                    log(&format!("typed {} characters in {} ms", text.chars().count(), started.elapsed().as_millis()));
-                    true
-                }
-                Err(e) => {
-                    log(&format!("typing failed: {e}"));
-                    false
-                }
-            },
-            // T9 pastes such a text from the clipboard.
+        self.copy.want(text);
+        let (done, result) = match typing::delivery(text) {
+            Delivery::Type => ("typed", self.typer.type_text(&self.portals, text)),
             Delivery::Paste => {
-                log("this text needs the clipboard paste, which is not there yet (T9)");
+                let result = self.typer.paste(&self.portals, text);
+                if result.is_ok() {
+                    self.copy.copied(text, Instant::now());
+                }
+                ("pasted", result)
+            }
+        };
+        match result {
+            Ok(()) => {
+                log(&format!("{done} {} characters in {} ms", text.chars().count(), started.elapsed().as_millis()));
+                true
+            }
+            Err(e) => {
+                log(&format!("could not reach the cursor: {e}"));
                 false
             }
         }
@@ -239,7 +268,10 @@ impl Host for Linux {
 
     fn reset_typing(&mut self) {}
 
-    fn clipboard_later(&mut self, _text: String) {}
+    /// The full text of a live dictation, for the clipboard at the end.
+    fn clipboard_later(&mut self, text: String) {
+        self.copy.want(&text);
+    }
 
     fn show(&mut self, state: State) {
         let name = match &state {

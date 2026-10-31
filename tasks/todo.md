@@ -139,7 +139,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - The unit tests for the "type or paste" rule and the keysym table pass.
   - Depends on: T6, S1, S2
 
-- [ ] **T9: One clipboard copy per dictation, and the paste fallback** (S, `linux/src/{clipboard,main}.rs`)
+- [x] **T9: One clipboard copy per dictation, and the paste fallback** (S, `linux/src/{clipboard,typing,main}.rs`)
   - Do: the Clipboard portal on T8's session (S2):
     - Put the full dictation on the clipboard at the end, once.
     - Answer each `SelectionTransfer` while the app owns the clipboard.
@@ -148,6 +148,9 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
   - Done when:
     - After a dictation, Ctrl+V in another app pastes the full text, and the clipboard history has one entry for it.
     - A dictation with "café" pastes correctly with English (US) active.
+  - Result (2026-10-31): Ctrl+V pasted the typed dictation, with one history entry. Deepgram writes "cafe" without the accent, so "€15" tested the paste: correct in gedit, one entry.
+    - Fixed during the test: the final copy right after a paste replaced the clipboard before gedit read it ("InIn ed €15"). The copy now waits 500 ms after a paste, as on Windows.
+    - Known: with live paste, a phrase that needs the paste is its own clipboard entry, before the final one.
   - Depends on: T8, S2
 
 - [ ] **T10: Alt+M, Ctrl+Alt+Z, Ctrl+Alt+Q through the GlobalShortcuts portal** (S, `linux/src/{hotkey,main}.rs`)

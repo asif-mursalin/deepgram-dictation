@@ -5,19 +5,23 @@
 //! Clipboard Access"); the restore token in ~/.config/dictation/
 //! portal-token skips the dialog after that, also after a reboot (S1).
 //!
-//! The text is typed as keysyms (S2): GNOME finds each one on any of the
-//! user's layouts, so English comes out right with Arabic active. Keysyms
-//! of characters that are on no layout (é, —, emoji) are dropped, so such
-//! a text is pasted from the clipboard instead (T9).
+//! The text is typed as keysyms (S2), with English (US) active (SPEC.md).
+//! Keysyms of characters that are on no layout (é, —, emoji) are dropped,
+//! so such a text is pasted instead: put on the clipboard, then Ctrl+V.
 
 use std::fs;
 use std::io::Write;
 use std::os::unix::fs::OpenOptionsExt;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 
+use ashpd::desktop::clipboard::Clipboard;
 use ashpd::desktop::remote_desktop::{DeviceType, KeyState, RemoteDesktop};
 use ashpd::desktop::{PersistMode, Session};
 use tokio::runtime::Runtime;
+use tokio::task::JoinHandle;
+
+use crate::clipboard;
 
 use dictation_core::log;
 
@@ -25,6 +29,9 @@ use dictation_core::log;
 const KEYSYM_RETURN: i32 = 0xff0d;
 /// X keysym for BackSpace.
 const KEYSYM_BACKSPACE: i32 = 0xff08;
+/// evdev key codes for Ctrl+V: the same keys on every layout (S2).
+const KEY_LEFTCTRL: i32 = 29;
+const KEY_V: i32 = 47;
 
 /// How a text reaches the cursor.
 #[derive(Debug, PartialEq)]
@@ -59,49 +66,87 @@ fn keysym(c: char) -> Option<i32> {
 struct Portal {
     remote: RemoteDesktop<'static>,
     session: Session<'static, RemoteDesktop<'static>>,
+    /// None if the clipboard portal is missing or was refused.
+    clipboard: Option<Clipboard<'static>>,
+}
+
+/// What to do through the portal.
+enum Action<'a> {
+    /// Press and release each key, as keysyms.
+    Keys(&'a [i32]),
+    /// Put the text on the clipboard.
+    Copy(&'a str),
+    /// Put the text on the clipboard and press Ctrl+V.
+    Paste(&'a str),
 }
 
 pub struct Typer {
     token: PathBuf,
-    portal: Option<Portal>,
+    portal: Option<Arc<Portal>>,
+    /// The text the app offers on the clipboard.
+    offer: Arc<Mutex<String>>,
+    /// Answers the apps that paste it, for the current session.
+    serving: Option<JoinHandle<()>>,
 }
 
 impl Typer {
     pub fn new(token: PathBuf) -> Typer {
-        Typer { token, portal: None }
+        Typer { token, portal: None, offer: Arc::default(), serving: None }
     }
 
     /// Open the portal session now, so the first dialog shows at start,
     /// not in the middle of the first dictation.
     pub fn connect(&mut self, runtime: &Runtime) -> Result<(), String> {
-        if self.portal.is_none() {
-            self.portal = Some(runtime.block_on(open(&self.token))?);
+        if self.portal.is_some() {
+            return Ok(());
         }
+        let portal = Arc::new(runtime.block_on(open(&self.token))?);
+        if let Some(old) = self.serving.take() {
+            old.abort();
+        }
+        if portal.clipboard.is_some() {
+            let (portal, offer) = (portal.clone(), self.offer.clone());
+            self.serving = Some(runtime.spawn(async move {
+                if let Some(clipboard) = &portal.clipboard {
+                    clipboard::serve(clipboard, &portal.session, &offer).await;
+                }
+            }));
+        }
+        self.portal = Some(portal);
         Ok(())
     }
 
     /// Type `text` at the cursor. The caller has checked `delivery`.
     pub fn type_text(&mut self, runtime: &Runtime, text: &str) -> Result<(), String> {
         let keys: Vec<i32> = text.chars().filter_map(keysym).collect();
-        self.send(runtime, &keys)
+        self.run(runtime, Action::Keys(&keys))
     }
 
     /// Delete `count` characters before the cursor.
     pub fn backspaces(&mut self, runtime: &Runtime, count: usize) -> Result<(), String> {
-        self.send(runtime, &vec![KEYSYM_BACKSPACE; count])
+        self.run(runtime, Action::Keys(&vec![KEYSYM_BACKSPACE; count]))
     }
 
-    /// Press and release each key. If the session broke (GNOME closes it
-    /// when the user revokes the permission), open a new one and try once
-    /// more.
-    fn send(&mut self, runtime: &Runtime, keys: &[i32]) -> Result<(), String> {
+    /// Put `text` on the clipboard.
+    pub fn copy(&mut self, runtime: &Runtime, text: &str) -> Result<(), String> {
+        self.run(runtime, Action::Copy(text))
+    }
+
+    /// Paste `text` at the cursor through the clipboard. It stays there.
+    pub fn paste(&mut self, runtime: &Runtime, text: &str) -> Result<(), String> {
+        self.run(runtime, Action::Paste(text))
+    }
+
+    /// If the session broke (GNOME closes it when the user revokes the
+    /// permission), open a new one and try once more.
+    fn run(&mut self, runtime: &Runtime, action: Action) -> Result<(), String> {
         for attempt in 0..2 {
             self.connect(runtime)?;
             let portal = self.portal.as_ref().expect("connected");
-            match runtime.block_on(press(portal, keys)) {
+            match runtime.block_on(act(portal, &self.offer, &action)) {
                 Ok(()) => return Ok(()),
                 Err(e) if attempt == 0 => {
-                    log(&format!("typing failed ({e}); opening a new portal session"));
+                    log(&format!("the portal call failed ({e}); opening a new portal session"));
                     self.portal = None;
                 }
                 Err(e) => return Err(e),
@@ -115,15 +160,20 @@ async fn open(token_path: &PathBuf) -> Result<Portal, String> {
     let saved = load_token(token_path);
     let remote = RemoteDesktop::new().await.map_err(|e| format!("RemoteDesktop portal: {e}"))?;
     let session = remote.create_session().await.map_err(|e| format!("CreateSession: {e}"))?;
-    // T9 uses the clipboard; ask for it now, so there is only one dialog.
-    match ashpd::desktop::clipboard::Clipboard::new().await {
-        Ok(clipboard) => {
-            if let Err(e) = clipboard.request(&session).await {
+    // Ask for the clipboard before Start, so it is in the same dialog.
+    let clipboard = match Clipboard::new().await {
+        Ok(clipboard) => match clipboard.request(&session).await {
+            Ok(()) => Some(clipboard),
+            Err(e) => {
                 log(&format!("clipboard not available: {e}"));
+                None
             }
+        },
+        Err(e) => {
+            log(&format!("clipboard portal not available: {e}"));
+            None
         }
-        Err(e) => log(&format!("clipboard portal not available: {e}")),
-    }
+    };
     remote
         .select_devices(&session, DeviceType::Keyboard.into(), saved.as_deref(), PersistMode::ExplicitlyRevoked)
         .await
@@ -141,17 +191,33 @@ async fn open(token_path: &PathBuf) -> Result<Portal, String> {
         }
     }
     log(&format!("typing ready ({})", if saved.is_some() { "permission remembered" } else { "permission granted" }));
-    Ok(Portal { remote, session })
+    Ok(Portal { remote, session, clipboard })
 }
 
-async fn press(portal: &Portal, keys: &[i32]) -> Result<(), String> {
-    for &key in keys {
-        for state in [KeyState::Pressed, KeyState::Released] {
-            portal
-                .remote
-                .notify_keyboard_keysym(&portal.session, key, state)
-                .await
-                .map_err(|e| e.to_string())?;
+async fn act(portal: &Portal, offer: &Mutex<String>, action: &Action<'_>) -> Result<(), String> {
+    let text = match action {
+        Action::Keys(keys) => {
+            for &key in *keys {
+                for state in [KeyState::Pressed, KeyState::Released] {
+                    portal.remote.notify_keyboard_keysym(&portal.session, key, state).await.map_err(|e| e.to_string())?;
+                }
+            }
+            return Ok(());
+        }
+        Action::Copy(text) | Action::Paste(text) => text,
+    };
+    let clipboard = portal.clipboard.as_ref().ok_or("no clipboard access (see the Remote Desktop dialog)")?;
+    *offer.lock().unwrap_or_else(|e| e.into_inner()) = text.to_string();
+    clipboard.set_selection(&portal.session, &clipboard::TYPES).await.map_err(|e| format!("SetSelection: {e}"))?;
+    if let Action::Paste(_) = action {
+        let keys = [
+            (KEY_LEFTCTRL, KeyState::Pressed),
+            (KEY_V, KeyState::Pressed),
+            (KEY_V, KeyState::Released),
+            (KEY_LEFTCTRL, KeyState::Released),
+        ];
+        for (key, state) in keys {
+            portal.remote.notify_keyboard_keycode(&portal.session, key, state).await.map_err(|e| e.to_string())?;
         }
     }
     Ok(())
