@@ -3,6 +3,7 @@
 
 pub mod art;
 pub mod audio;
+pub mod deepgram;
 pub mod env;
 pub mod gfx;
 pub mod logging;

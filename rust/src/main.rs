@@ -15,7 +15,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod config;
-mod deepgram;
 mod live;
 mod logging;
 mod overlay;
@@ -28,7 +27,7 @@ mod typing;
 mod words_window;
 
 // The icons and the drawing code, shared with the Linux app.
-use dictation_core::{art, audio, gfx, words};
+use dictation_core::{art, audio, deepgram, gfx, words};
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc::Sender;

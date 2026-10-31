@@ -12,3 +12,18 @@ name = "dictation_core"
 [dependencies]
 cpal = "0.15"
 hound = "3"
+serde_json = "1"
+
+# Windows: Windows' own TLS (SChannel) for both, so no C compiler is needed.
+[target.'cfg(windows)'.dependencies]
+# Pinned: newer schannel uses windows-sys 0.61, which needs dlltool.exe
+# (not part of the GNU toolchain). Unpin when we build with MSVC (#11).
+native-tls = "=0.2.14"
+schannel = "=0.1.27"
+tungstenite = { version = "0.24", features = ["native-tls"] }
+ureq = { version = "2", default-features = false, features = ["native-tls"] }
+
+# Linux: rustls, pure Rust, so the app needs no OpenSSL (SPEC.md).
+[target.'cfg(not(windows))'.dependencies]
+tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+ureq = { version = "2", default-features = false, features = ["tls"] }

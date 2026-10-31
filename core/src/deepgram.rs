@@ -89,6 +89,9 @@ fn keyterm_error(code: u16, body: &str) -> bool {
     code == 400 && body.to_ascii_lowercase().contains("keyterm")
 }
 
+// TLS: Windows' own (SChannel) on Windows, through native-tls; rustls
+// (pure Rust) elsewhere. Cargo.toml picks the crates per platform.
+#[cfg(windows)]
 fn tls() -> Result<native_tls::TlsConnector, Error> {
     native_tls::TlsConnector::new().map_err(|e| Error::Network(e.to_string()))
 }
@@ -101,7 +104,10 @@ fn agent() -> Result<&'static ureq::Agent, Error> {
     if let Some(a) = AGENT.get() {
         return Ok(a);
     }
+    #[cfg(windows)]
     let agent = ureq::AgentBuilder::new().tls_connector(Arc::new(tls()?)).timeout(BATCH_TIMEOUT).build();
+    #[cfg(not(windows))]
+    let agent = ureq::AgentBuilder::new().timeout(BATCH_TIMEOUT).build();
     Ok(AGENT.get_or_init(|| agent))
 }
 
@@ -348,8 +354,12 @@ fn connect(key: &str, terms: &[String]) -> Result<Socket, Error> {
     let addr = (HOST, 443).to_socket_addrs().map_err(|e| net(&e))?.next().ok_or_else(|| net(&"no address"))?;
     let tcp = TcpStream::connect_timeout(&addr, CONNECT_TIMEOUT).map_err(|e| net(&e))?;
     tcp.set_nodelay(true).map_err(|e| net(&e))?;
-    let connector = tungstenite::Connector::NativeTls(tls()?);
-    let (socket, _) = tungstenite::client_tls_with_config(request, tcp, None, Some(connector))
+    #[cfg(windows)]
+    let connector = Some(tungstenite::Connector::NativeTls(tls()?));
+    // tungstenite's own rustls connector, with the webpki root certificates
+    #[cfg(not(windows))]
+    let connector = None;
+    let (socket, _) = tungstenite::client_tls_with_config(request, tcp, None, connector)
         .map_err(|e| match e {
             tungstenite::HandshakeError::Failure(tungstenite::Error::Http(r)) => {
                 let code = r.status().as_u16();
@@ -367,7 +377,10 @@ fn connect(key: &str, terms: &[String]) -> Result<Socket, Error> {
 
     // from here on, poll: send audio and read results in one loop
     match socket.get_ref() {
+        #[cfg(windows)]
         MaybeTlsStream::NativeTls(s) => s.get_ref().set_nonblocking(true),
+        #[cfg(not(windows))]
+        MaybeTlsStream::Rustls(s) => s.get_ref().set_nonblocking(true),
         MaybeTlsStream::Plain(s) => s.set_nonblocking(true),
         _ => Ok(()),
     }
@@ -518,6 +531,17 @@ mod tests {
     fn other_batch_errors_are_returned() {
         let result = fallback(None, &terms(), false, |_| Err(Error::KeyRejected), |_| panic!());
         assert!(matches!(result, Err(Error::KeyRejected)));
+    }
+
+    /// Calls Deepgram with a wrong key (free): checks that TLS works for the
+    /// batch upload and for the stream. Needs the network:
+    /// cargo test -- --ignored a_wrong_key_is_rejected
+    #[test]
+    #[ignore]
+    fn a_wrong_key_is_rejected() {
+        let wrong = "0000000000000000000000000000000000000000";
+        assert!(matches!(check_key(wrong), Err(Error::KeyRejected)));
+        assert!(matches!(connect(wrong, &[]), Err(Error::KeyRejected)));
     }
 
     /// Calls Deepgram (costs a little). Run with a key:

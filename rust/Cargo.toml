@@ -9,16 +9,8 @@ publish = false
 [dependencies]
 # The code shared with the Linux app (SPEC.md)
 dictation-core = { path = "../core" }
-cpal = "0.15"
-hound = "3"
-# Pinned: newer schannel uses windows-sys 0.61, which needs dlltool.exe
-# (not part of the GNU toolchain). Unpin when we build with MSVC (#11).
-native-tls = "=0.2.14"
-schannel = "=0.1.27"
-serde_json = "1"
-# Windows' own TLS (SChannel) for both, so no C compiler is needed
-tungstenite = { version = "0.24", features = ["native-tls"] }
-ureq = { version = "2", default-features = false, features = ["native-tls"] }
+# Audio, Deepgram and TLS come through core (its Cargo.toml has the
+# native-tls and schannel pins).
 
 [build-dependencies]
 embed-resource = "3"
