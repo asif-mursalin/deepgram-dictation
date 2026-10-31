@@ -81,7 +81,7 @@ Sizes: XS = 1 file, S = 1–2 files, M = 3–5 files.
     - `dictation.exe` still has its icon (CI artifact, checked in Explorer).
   - Depends on: T1, T2
 
-- [ ] **T4: Move audio, words, deepgram, logging and `.env` parsing into `core/`** (M, `core/src/{audio,words,deepgram,logging,env}.rs`, `rust/src/{main,config,logging}.rs`)
+- [x] **T4: Move audio, words, deepgram, logging and `.env` parsing into `core/`** (M, `core/src/{audio,words,deepgram,logging,env}.rs`, `rust/src/{main,config,logging}.rs`)
   - Do:
     - `core::logging` has `log()`, plus `set_writer()` for the app's writer and timestamp.
     - `words::path()` and `.env` lookup take a folder from the app.

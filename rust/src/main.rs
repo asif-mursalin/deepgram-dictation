@@ -14,9 +14,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod audio;
 mod config;
-mod deepgram;
 mod live;
 mod logging;
 mod overlay;
@@ -26,11 +24,10 @@ mod setup;
 mod theme;
 mod tray;
 mod typing;
-mod words;
 mod words_window;
 
 // The icons and the drawing code, shared with the Linux app.
-use dictation_core::{art, gfx};
+use dictation_core::{art, audio, deepgram, gfx, words};
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc::Sender;
@@ -472,7 +469,7 @@ impl Host for Desktop {
     }
 }
 
-pub use logging::log;
+pub use dictation_core::log;
 
 /// Save the key and the autostart choice from the setup window.
 fn apply_setup(choice: &setup::Choice) -> Result<(), String> {

@@ -4,7 +4,7 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::log;
 
@@ -41,13 +41,24 @@ pub enum Fill {
     Over,
 }
 
-/// words.txt next to the .exe.
+/// The folder of words.txt, if the app chose one (the Linux app does).
+static DIR: OnceLock<PathBuf> = OnceLock::new();
+
+/// Keep words.txt in `dir`. Call it once, at start.
+pub fn set_dir(dir: PathBuf) {
+    let _ = DIR.set(dir);
+}
+
+/// words.txt in the folder from `set_dir`, or else next to the .exe.
 pub fn path() -> Option<PathBuf> {
-    Some(std::env::current_exe().ok()?.with_file_name("words.txt"))
+    match DIR.get() {
+        Some(dir) => Some(dir.join("words.txt")),
+        None => Some(std::env::current_exe().ok()?.with_file_name("words.txt")),
+    }
 }
 
 impl Words {
-    /// The words in words.txt next to the .exe.
+    /// The words in words.txt (see `path`).
     pub fn new() -> Words {
         Words::at(path())
     }
