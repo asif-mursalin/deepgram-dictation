@@ -281,6 +281,10 @@ dependencies = [
 [[package]]
 name = "dictation-core"
 version = "2.2.0"
+dependencies = [
+ "cpal",
+ "hound",
+]
 
 [[package]]
 name = "digest"

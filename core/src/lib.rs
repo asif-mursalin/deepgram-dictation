@@ -2,4 +2,10 @@
 //! share. Nothing here calls Windows or Linux (SPEC.md).
 
 pub mod art;
+pub mod audio;
+pub mod env;
 pub mod gfx;
+pub mod logging;
+pub mod words;
+
+pub use logging::log;
